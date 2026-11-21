@@ -46,6 +46,18 @@ export function initialState(): AppState {
   };
 }
 
+/** Built-in words follow the app's current bundled pictures (so a new picture
+ *  set reaches boards saved earlier), but only while they still use a bundled
+ *  picture: a photo or pictogram the family chose is kept. */
+export function refreshSeedPictures(words: Word[]): Word[] {
+  const seeds = new Map(seedWords().map((w) => [w.id, w.picture]));
+  return words.map((w) => {
+    const seed = seeds.get(w.id);
+    if (!seed || w.picture.kind !== 'builtin' || seed.kind !== 'builtin' || seed.src === w.picture.src) return w;
+    return { ...w, picture: seed };
+  });
+}
+
 function load(): AppState {
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
@@ -53,7 +65,9 @@ function load(): AppState {
       const parsed = JSON.parse(raw) as AppState;
       if (parsed.version === 1 && Array.isArray(parsed.words)) {
         const fresh = initialState();
-        return { ...fresh, ...parsed, settings: { ...fresh.settings, ...parsed.settings } };
+        const loaded: AppState = { ...fresh, ...parsed, words: refreshSeedPictures(parsed.words), settings: { ...fresh.settings, ...parsed.settings } };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
+        return loaded;
       }
     }
   } catch {

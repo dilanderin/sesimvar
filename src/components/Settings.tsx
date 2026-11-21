@@ -16,7 +16,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { CATEGORIES, CATEGORY_BY_ID, defaultSay, freeSlot, newWordId, type CategoryId, type Picture, type Word } from '../lib/data';
+import { CATEGORIES, CATEGORY_BY_ID, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
 import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, summarize } from '../lib/backup';
 import { mix } from '../lib/color';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
@@ -35,7 +35,7 @@ import {
   type CardSize,
   type ThemeChoice,
 } from '../lib/store';
-import { formatDuration, voiceLabel } from '../lib/turkish';
+import { formatDuration, lowerTr, voiceLabel } from '../lib/turkish';
 import { Parrot } from './Parrot';
 import { useStage } from './Stage';
 import { WordPicture } from './WordPicture';
@@ -64,6 +64,8 @@ const btn: CSSProperties = {
 
 /** Family roles are common nouns ("Annenin sesi"); anything else is a name ("Dilan'ın sesi"). */
 const FAMILY_ROLES = new Set(['Anne', 'Baba', 'Amca', 'Hala', 'Teyze', 'Dayı', 'Doktor', 'Dede', 'Nine', 'Babaanne', 'Anneanne', 'Abla', 'Ağabey', 'Abi', 'Kardeş', 'Öğretmen']);
+
+type PictoResult = ArasaacResult & { library?: LibraryItem };
 
 const fieldLabel: CSSProperties = { fontSize: 15, fontWeight: 700, color: C.muted };
 
@@ -346,9 +348,9 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
   const [category, setCategory] = useState<CategoryId>(
     () => (['esyalar', 'kisiler', 'duygu', 'ekran', 'yerler', ...CATEGORIES.map((c) => c.id)] as CategoryId[]).find((id) => freeSlot(words, id) >= 0) ?? 'esyalar',
   );
-  const [results, setResults] = useState<ArasaacResult[]>([]);
+  const [results, setResults] = useState<PictoResult[]>([]);
   const [searchState, setSearchState] = useState<'idle' | 'loading' | 'done' | 'offline'>('idle');
-  const [chosen, setChosen] = useState<ArasaacResult | null>(null);
+  const [chosen, setChosen] = useState<PictoResult | null>(null);
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [by, setBy] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -356,20 +358,26 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
   const rec = useRecorder();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Search ARASAAC as the word is typed.
+  // As the word is typed: the app's own ready-made pictures first (offline),
+  // then ARASAAC.
   useEffect(() => {
     if (mode !== 'piktogram' || !label.trim()) {
       setResults([]);
+      setChosen(null);
       setSearchState('idle');
       return;
     }
+    const lib: PictoResult[] = searchLibrary(label).map((item, i) => ({ id: -(i + 1), url: item.src, library: item }));
+    setResults(lib);
+    setChosen(lib[0] ?? null);
+    if (lib[0] && freeSlot(words, lib[0].library!.category) >= 0) setCategory(lib[0].library!.category);
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       setSearchState('loading');
       try {
         const r = await searchArasaac(label, ctrl.signal);
-        setResults(r);
-        setChosen(r[0] ?? null);
+        setResults([...lib, ...r]);
+        setChosen((prev) => (prev?.library ? prev : (lib[0] ?? r[0] ?? null)));
         setSearchState('done');
       } catch {
         if (!ctrl.signal.aborted) setSearchState('offline');
@@ -381,10 +389,14 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
     };
   }, [label, mode]);
 
+  const libItem = mode === 'piktogram' ? chosen?.library : undefined;
+  const typed = label.trim();
+  const finalLabel = libItem && lowerTr(libItem.label).startsWith(lowerTr(typed)) ? libItem.label : typed;
+  const libCategoryFull = !!libItem && freeSlot(words, libItem.category) < 0;
   const slot = freeSlot(words, category);
   const full = slot < 0;
   const catName = CATEGORY_BY_ID[category].name;
-  const cleanLabel = label.trim();
+  const cleanLabel = finalLabel;
 
   const previewPicture: Picture | null =
     mode === 'yazi' ? { kind: 'text' } : mode === 'foto' ? (photo ? { kind: 'builtin', src: photo.url } : null) : chosen ? { kind: 'builtin', src: chosen.url } : null;
@@ -413,6 +425,8 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
         const key = newBlobKey('photo');
         await saveBlob(key, photo.blob);
         picture = { kind: 'stored', key, source: 'photo' };
+      } else if (mode === 'piktogram' && chosen?.library) {
+        picture = { kind: 'builtin', src: chosen.library.src };
       } else if (mode === 'piktogram' && chosen) {
         const key = newBlobKey('arasaac');
         await saveBlob(key, await fetchBlob(chosen.url));
@@ -535,7 +549,9 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
         </div>
         <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
           {mode === 'piktogram' &&
-            (searchState === 'idle'
+            (results.some((r) => r.library) && (searchState !== 'done' || results.every((r) => r.library))
+              ? `Sesim Var’ın hazır resmi bulundu.${libCategoryFull && libItem ? ` ${CATEGORY_BY_ID[libItem.category].name} dolu; başka bir kategori seçin.` : ''}${searchState === 'offline' ? ' (İnternet yok; ARASAAC aranamadı.)' : ''}`
+              : searchState === 'idle'
               ? 'Kelimeyi yazın; ARASAAC’ta uygun resimler aranır.'
               : searchState === 'loading'
                 ? 'Aranıyor…'
@@ -559,7 +575,7 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
           {mode === 'yazi' && 'Kartta resim yerine kelimenin ilk harfi görünür.'}
         </div>
       </div>
-      {mode === 'piktogram' && results.length > 1 && (
+      {mode === 'piktogram' && (results.length > 1 || (results.length === 1 && searchState === 'done' && !results[0].library)) && (
         <div role="group" aria-label="ARASAAC sonuçları" style={{ display: 'flex', gap: 6 }}>
           {results.map((r) => (
             <button
@@ -567,7 +583,10 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
               type="button"
               aria-pressed={chosen?.id === r.id}
               aria-label={`Resim ${r.id}`}
-              onClick={() => setChosen(r)}
+              onClick={() => {
+                setChosen(r);
+                if (r.library && freeSlot(words, r.library.category) >= 0) setCategory(r.library.category);
+              }}
               style={{
                 ...btn,
                 width: 48,

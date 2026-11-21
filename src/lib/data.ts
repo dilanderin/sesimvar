@@ -11,11 +11,11 @@ export interface Category {
 
 /** The nine categories, in tab-bar order, with the base colours from the design. */
 export const CATEGORIES: Category[] = [
-  { id: 'temel', name: 'Temel', color: '#7B61FF', icon: 'pictos/evet.svg' },
-  { id: 'kisiler', name: 'Kişiler', color: '#FF9600', icon: 'pictos/kisiler.png' },
-  { id: 'eylem', name: 'Eylem', color: '#A9713F', icon: 'pictos/gel.svg' },
-  { id: 'gunluk', name: 'Günlük', color: '#00B4C4', icon: 'pictos/yemek.png' },
-  { id: 'vucut', name: 'Vücut', color: '#FF4B6E', icon: 'pictos/kol.svg' },
+  { id: 'temel', name: 'Temel', color: '#7B61FF', icon: 'pictos/v2/evet.png' },
+  { id: 'kisiler', name: 'Kişiler', color: '#FF9600', icon: 'pictos/v2/kisiler.png' },
+  { id: 'eylem', name: 'Eylem', color: '#A9713F', icon: 'pictos/v2/gel.png' },
+  { id: 'gunluk', name: 'Günlük', color: '#00B4C4', icon: 'pictos/v2/yemek.png' },
+  { id: 'vucut', name: 'Vücut', color: '#FF4B6E', icon: 'pictos/v2/kol.png' },
   { id: 'duygu', name: 'Duygu', color: '#F2B100', icon: 'pictos/duygu.png' },
   { id: 'ekran', name: 'Ekran', color: '#1C9BF6', icon: 'pictos/ekran.png' },
   { id: 'esyalar', name: 'Eşyalar', color: '#2BC866', icon: 'pictos/tablet.png' },
@@ -155,6 +155,50 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
   yerler: [['Eve', 'ev.png']],
 };
 
+/** Pictograms redrawn for Sesim Var (outlined style), by file stem. Seed
+ *  words use one of these when it exists, otherwise their original picture. */
+export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'al', 'anne', 'ara', 'arkadas', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'bekle', 'ben', 'bilmiyorum', 'bitti', 'bugun', 'cay', 'daha', 'dis', 'doktor', 'dun', 'dustu', 'ekmek', 'evet', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'gonder', 'hasta', 'hayir', 'ilac', 'istemiyorum', 'istiyorum', 'izle', 'kapat', 'karin', 'kasiniyor', 'kim', 'kirildi', 'kisiler', 'kizardi', 'kol', 'ne', 'nerede', 'oldu', 'oyna', 'sicak', 'simdi', 'sonra', 'su', 'susadim', 'tamam', 'tuvalet', 'usudum', 'uyku', 'var', 'ver', 'yap', 'yardim', 'yarin', 'yemek', 'yok', 'yoruldum']);
+
+function pictoSrc(file: string): string {
+  const stem = file.replace(/\.(png|svg)$/, '');
+  const alias: Record<string, string> = { ev: 'eve' };
+  const name = alias[stem] ?? stem;
+  return V2_PICTOS.has(name) ? `pictos/v2/${name}.png` : `pictos/${file}`;
+}
+
+export interface LibraryItem {
+  label: string;
+  category: CategoryId;
+  src: string;
+}
+
+/** Ready-made pictures that are not on the board yet. The board starts small;
+ *  the family adds these from Ayarlar (they appear when the word is typed). */
+export const LIBRARY: LibraryItem[] = (
+  [
+    ['Bugün', 'temel', 'bugun'],
+    ['Yarın', 'temel', 'yarin'],
+    ['Dün', 'temel', 'dun'],
+    ['Arkadaş', 'kisiler', 'arkadas'],
+    ['Gidelim', 'eylem', 'gidelim'],
+    ['Geldi', 'eylem', 'geldi'],
+    ['Gitti', 'eylem', 'gitti'],
+    ['Aç', 'eylem', 'ac'],
+    ['Kapat', 'eylem', 'kapat'],
+  ] as [string, CategoryId, string][]
+)
+  .filter(([, , stem]) => V2_PICTOS.has(stem))
+  .map(([label, category, stem]) => ({ label, category, src: `pictos/v2/${stem}.png` }));
+
+/** Library pictures whose word starts with (or contains) what was typed. */
+export function searchLibrary(query: string): LibraryItem[] {
+  const q = lowerTr(query.trim());
+  if (!q) return [];
+  const starts = LIBRARY.filter((i) => lowerTr(i.label).startsWith(q));
+  const contains = LIBRARY.filter((i) => !starts.includes(i) && lowerTr(i.label).includes(q));
+  return [...starts, ...contains];
+}
+
 function slug(s: string): string {
   return lowerTr(s)
     .replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u')
@@ -178,7 +222,7 @@ export function seedWords(): Word[] {
         category: cat,
         slot,
         hidden: !!opts?.hidden,
-        picture: picto ? { kind: 'builtin', src: `pictos/${picto}` } : { kind: 'text' },
+        picture: picto ? { kind: 'builtin', src: pictoSrc(picto) } : { kind: 'text' },
       });
     });
   }
