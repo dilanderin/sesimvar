@@ -3,6 +3,7 @@ import { Check, History, Settings as SettingsIcon, X } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, SLOTS_PER_CATEGORY, type Category, type CategoryId, type Word } from '../lib/data';
 import { DECOR } from '../lib/decor';
 import { saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
+import { isValidAddress, sentenceText, smsUrl } from '../lib/messages';
 import { clearHistory, rememberSentence, useAppState } from '../lib/store';
 import { tones, type Theme, type Tones } from '../lib/theme';
 import {
@@ -269,11 +270,18 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     rememberSentence(list.map((c) => c.word.id));
     stopSpeaking();
     setReadingIdx(null);
-    void saySentence(
-      list.map((c) => c.word),
-      settings.voiceURI,
-      () => undefined,
-    );
+    const to = settings.sendTo?.address ?? '';
+    if (isValidAddress(to)) {
+      // Open Messages with the sentence written and addressed; the person taps send there.
+      // This must happen inside the tap, or iOS blocks it.
+      window.location.href = smsUrl(to, sentenceText(list.map((c) => c.word)));
+    } else {
+      void saySentence(
+        list.map((c) => c.word),
+        settings.voiceURI,
+        () => undefined,
+      );
+    }
     const finish = () => {
       setChips([]);
       setFlights([]);
@@ -293,7 +301,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       setConfetti(0);
       showPose('cheeky', 1400);
     });
-  }, [later, launching, motion, settings.voiceURI, showPose]);
+  }, [later, launching, motion, settings.sendTo, settings.voiceURI, showPose]);
 
   const backspace = () => {
     lastActivity.current = Date.now();
@@ -521,7 +529,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     >
       <div style={{ marginBottom: 20 }}>{parrotBlock}</div>
       {balloon}
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 20, alignItems: 'flex-end' }}>
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 20, alignItems: 'flex-end', marginBottom: 30 }}>
         {okuBtn}
         {gonderBtn}
       </div>

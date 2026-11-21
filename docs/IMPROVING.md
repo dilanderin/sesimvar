@@ -27,7 +27,11 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 - [ ] **Accessibility**: VoiceOver labels audit, switch/keyboard scanning, high-contrast option.
 - [ ] **Performance**: lighter first load, image lazy-loading in Ayarlar.
 
+## Decided by the owner
+
+- **Gönder** sends the sentence to the owner in the Messages app (2026-11-21). It opens Messages with the text filled in; iOS requires one tap on send. Without an address it only speaks.
+- Changes are pushed directly to `main`, without pull requests.
+
 ## Ask the family (don't do without the owner)
 
-- What should **Gönder** send to, and to whom? (For now it speaks and celebrates.)
 - Changing the six words of the always-visible row by default.

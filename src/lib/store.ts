@@ -19,6 +19,8 @@ export interface Settings {
   speechRate: SpeechRate;
   /** Ignore another card tap within this many ms (0 = off), for unsteady hands. */
   tapGuardMs: TapGuard;
+  /** Gönder opens Messages to this person (phone number or iMessage address). Empty: Gönder only speaks. */
+  sendTo: { name: string; address: string };
 }
 
 export type SpeechRate = 'slow' | 'normal' | 'fast';
@@ -57,6 +59,7 @@ export function initialState(): AppState {
       core: words.filter((w) => w.category === 'core').map((w) => w.id),
       speechRate: 'normal',
       tapGuardMs: 0,
+      sendTo: { name: '', address: '' },
     },
   };
 }

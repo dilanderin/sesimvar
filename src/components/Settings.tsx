@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
   Lock,
   LockOpen,
+  MessageCircle,
   Mic,
   Play,
   Plus,
@@ -19,6 +20,7 @@ import {
 import { CATEGORIES, CATEGORY_BY_ID, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
 import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, summarize } from '../lib/backup';
 import { mix } from '../lib/color';
+import { isValidAddress, smsUrl } from '../lib/messages';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
 import { useRecorder, type Take } from '../lib/recorder';
 import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, turkishVoices } from '../lib/speech';
@@ -1042,6 +1044,91 @@ function VoiceAndParrot() {
   );
 }
 
+// ------------------------------------------------------- Gönder → Messages
+
+function SendSetup() {
+  const { settings } = useAppState();
+  const sendTo = settings.sendTo ?? { name: '', address: '' };
+  const [address, setAddress] = useState(sendTo.address);
+  const [name, setName] = useState(sendTo.name);
+  const valid = isValidAddress(address);
+  const empty = !address.trim();
+  const save = (patch: Partial<{ name: string; address: string }>) => updateSettings({ sendTo: { ...sendTo, name, address, ...patch } });
+  const input: CSSProperties = {
+    height: 50,
+    boxSizing: 'border-box',
+    padding: '0 16px',
+    border: `2px solid ${C.line}`,
+    borderRadius: 14,
+    fontFamily: FONT,
+    fontSize: 18,
+    fontWeight: 600,
+    color: C.ink,
+    outlineColor: C.orange,
+    width: '100%',
+  };
+  return (
+    <Card title="Gönder → Mesajlar">
+      <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
+        Gönder’e basınca Mesajlar açılır; cümle yazılmış ve size adreslenmiş olarak gelir. Göndermek için Mesajlar’daki oka bir kez dokunmak yeterli. Boş
+        bırakırsanız Gönder cümleyi sadece sesli söyler.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <label htmlFor="send-name" style={fieldLabel}>
+          Kime? (isim)
+        </label>
+        <input id="send-name" type="text" value={name} placeholder="Örn. Anne" onChange={(e) => setName(e.target.value)} onBlur={() => save({ name: name.trim() })} style={input} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <label htmlFor="send-address" style={fieldLabel}>
+          Telefon numarası ya da iMessage adresi
+        </label>
+        <input
+          id="send-address"
+          type="text"
+          inputMode="email"
+          autoComplete="off"
+          autoCapitalize="off"
+          value={address}
+          placeholder="+90 5xx xxx xx xx"
+          onChange={(e) => setAddress(e.target.value)}
+          onBlur={() => save({ address: address.trim() })}
+          style={{ ...input, borderColor: !empty && !valid ? '#E5484D' : C.line }}
+        />
+        {!empty && !valid && (
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#B3261E' }}>Bu bir telefon numarasına ya da e-posta adresine benzemiyor.</span>
+        )}
+      </div>
+      <button
+        type="button"
+        disabled={!valid}
+        onClick={() => {
+          save({ address: address.trim(), name: name.trim() });
+          window.location.href = smsUrl(address, `Merhaba! Bu, Sesim Var’dan bir deneme mesajı.`);
+        }}
+        style={{
+          ...btn,
+          height: 46,
+          borderRadius: 14,
+          background: C.soft,
+          color: C.text,
+          boxShadow: `inset 0 -4px 0 ${C.line}`,
+          fontSize: 16,
+          fontWeight: 600,
+          opacity: valid ? 1 : 0.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        }}
+      >
+        <MessageCircle size={18} strokeWidth={2.6} aria-hidden="true" />
+        Deneme mesajı aç
+      </button>
+    </Card>
+  );
+}
+
 // ------------------------------------------------------------------ backup
 
 function Backup() {
@@ -1237,6 +1324,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
           {portrait && (
             <>
               <CoreRowEditor />
+              <SendSetup />
               <Backup />
             </>
           )}
@@ -1255,6 +1343,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <CoreRowEditor />
             <Appearance />
             <VoiceAndParrot />
+            <SendSetup />
             <Backup />
           </div>
         )}
