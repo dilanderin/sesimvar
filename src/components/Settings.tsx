@@ -17,10 +17,10 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { CATEGORIES, CATEGORY_BY_ID, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
+import { CATEGORIES, CATEGORY_BY_ID, LIBRARY, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
 import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, summarize } from '../lib/backup';
 import { mix } from '../lib/color';
-import { isValidAddress, smsUrl } from '../lib/messages';
+import { isValidAddress, openMessages, smsUrl } from '../lib/messages';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
 import { useRecorder, type Take } from '../lib/recorder';
 import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, turkishVoices } from '../lib/speech';
@@ -608,6 +608,37 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
           ))}
         </div>
       )}
+      {mode === 'piktogram' && !label.trim() && LIBRARY.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={fieldLabel}>Hazır resimler</span>
+          <div className="kb-noscrollbar" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
+            {LIBRARY.filter((item) => !words.some((w) => w.label === item.label)).map((item) => (
+              <button
+                key={item.src}
+                type="button"
+                onClick={() => setLabel(item.label)}
+                style={{
+                  ...btn,
+                  flex: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px 6px 6px',
+                  minHeight: 44,
+                  borderRadius: 14,
+                  background: C.soft,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: C.text,
+                }}
+              >
+                <img src={item.src} alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={fieldLabel}>Kategori</span>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -945,6 +976,13 @@ function Appearance() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 600 }}>Kelime çekimleri</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>Karta basılı tutunca: kolum, suya, annem, geliyorum, gelme…</div>
+        </div>
+        <Toggle on={!!settings.wordForms} onChange={(wordForms) => updateSettings({ wordForms })} label="Kelime çekimleri" />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 600 }}>Hareket ve animasyon</div>
           <div style={{ fontSize: 13, fontWeight: 500, color: C.muted }}>Kapalıyken sakin mod</div>
         </div>
@@ -1104,7 +1142,7 @@ function SendSetup() {
         disabled={!valid}
         onClick={() => {
           save({ address: address.trim(), name: name.trim() });
-          window.location.href = smsUrl(address, `Merhaba! Bu, Sesim Var’dan bir deneme mesajı.`);
+          openMessages(smsUrl(address, `Merhaba! Bu, Sesim Var’dan bir deneme mesajı.`));
         }}
         style={{
           ...btn,

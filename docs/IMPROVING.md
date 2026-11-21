@@ -2,6 +2,11 @@
 
 Sesim Var is someone's voice. Every change has to make it better for the person who talks with it and for their family, and must never take anything away from them. The owner has asked for continuous, unattended improvement. These rules are what make that safe.
 
+## Testing notes
+
+- Messages: set `window.__sesimvarOpenUrl = (url) => console.log(url)` in a Playwright init script to capture the Messages link, because headless Chromium doesn't reliably report `sms:` navigations.
+- Speech: stub `speechSynthesis.speak` in an init script to call `onend`.
+
 ## Rules (every run)
 
 1. **Never move or remove what's on the board.** Existing words keep their category and place, because people find words by where they are (motor planning). New words go only into free places or the library. Hiding a word leaves its place empty.
@@ -19,8 +24,8 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 - [x] **Son cümleler** (recent sentences): a small list in the balloon area or in Ayarlar to say a recent sentence again with one tap.
 - [x] **Accidental-tap protection** (repeat-tap guard done; "hold to select" still to do) in Ayarlar: ignore repeat taps within N ms, and optionally "hold to select" for unsteady hands.
 - [x] **Speech speed** (pitch still to do) in Ses ve papağan.
-- [ ] **Word forms** (Turkish suffixes): long-press a card to choose suya, suyu, suda… Keep a single tap working exactly as now.
-- [ ] **Library browser** in Kelime ekle: show the ready-made pictures by category, not only by typing.
+- [x] **Word forms** (Turkish suffixes, in `src/lib/forms.ts`; add forms for new built-in words there): long-press a card to choose suya, suyu, suda… Keep a single tap working exactly as now.
+- [x] **Library browser** in Kelime ekle: show the ready-made pictures by category, not only by typing.
 - [ ] **More vocabulary in the library**: common verbs (iç, ye, uyu, otur, kalk), describing words (büyük, küçük, sıcak, soğuk, çok, az), feelings and needs, each with a pictogram.
 - [ ] **Larger boards option**: a second page per category, off by default. It must not change the first page.
 - [ ] **Usage-aware suggestions** (local only): in Ayarlar, show words the family often types but that are not on the board yet.

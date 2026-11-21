@@ -21,6 +21,8 @@ export interface Settings {
   tapGuardMs: TapGuard;
   /** Gönder opens Messages to this person (phone number or iMessage address). Empty: Gönder only speaks. */
   sendTo: { name: string; address: string };
+  /** Hold a card to choose a word form (kolum, suya, geliyorum…). Off by default. */
+  wordForms: boolean;
 }
 
 export type SpeechRate = 'slow' | 'normal' | 'fast';
@@ -60,6 +62,7 @@ export function initialState(): AppState {
       speechRate: 'normal',
       tapGuardMs: 0,
       sendTo: { name: '', address: '' },
+      wordForms: false,
     },
   };
 }

@@ -3,7 +3,8 @@ import { Check, History, Settings as SettingsIcon, X } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, SLOTS_PER_CATEGORY, type Category, type CategoryId, type Word } from '../lib/data';
 import { DECOR } from '../lib/decor';
 import { saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
-import { isValidAddress, sentenceText, smsUrl } from '../lib/messages';
+import { wordForms } from '../lib/forms';
+import { isValidAddress, openMessages, sentenceText, smsUrl } from '../lib/messages';
 import { clearHistory, rememberSentence, useAppState } from '../lib/store';
 import { tones, type Theme, type Tones } from '../lib/theme';
 import {
@@ -27,12 +28,23 @@ import { STAGE, toStageRect, useStage } from './Stage';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
+/** A word as it is said in the sentence: its chosen form, without the base word's recording. */
+const spoken = (w: Word, form?: string): Word => (form ? { ...w, say: form, recording: undefined } : w);
+/** History entries are "id" or "id::form". */
+const historyKey = (c: { word: Word; form?: string }) => (c.form ? `${c.word.id}::${c.form}` : c.word.id);
+
+interface Said {
+  word: Word;
+  form?: string;
+}
+
 interface Flight {
   uid: string;
   word: Word;
   from: Rect;
   to: Rect;
   circle: string;
+  form?: string;
 }
 
 let uidCounter = 0;
@@ -83,6 +95,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   const lastActivity = useRef(Date.now());
   const lastTapAt = useRef(0);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [formsFor, setFormsFor] = useState<{ word: Word; rect: Rect } | null>(null);
   const poseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Show a pose, then drift back to idle. */
@@ -157,7 +170,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
 
   // ------------------------------------------------------------ tap a word
   const tap = useCallback(
-    (word: Word, circleEl: HTMLElement) => {
+    (word: Word, circleEl: HTMLElement, form?: string) => {
       unlockAudio();
       const now = Date.now();
       // Accidental-tap protection: ignore another card tap that comes too soon.
@@ -172,8 +185,8 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         // Calm mode: a ring around the card, the word appears at once.
         setRingId(word.id);
         later(500, () => setRingId((r) => (r === word.id ? null : r)));
-        setChips((cs) => [...cs, { uid, word, tones: t, pending: false, popping: false }]);
-        void sayWord(word, settings.voiceURI);
+        setChips((cs) => [...cs, { uid, word, tones: t, pending: false, popping: false, form }]);
+        void sayWord(spoken(word, form), settings.voiceURI);
         return;
       }
 
@@ -185,7 +198,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       setSparkles((s) => [...s, { id: sid, rect: from, color: t.base }]);
       later(520, () => setSparkles((s) => s.filter((x) => x.id !== sid)));
       showPose('look');
-      setChips((cs) => [...cs, { uid, word, tones: t, pending: true, popping: false }]);
+      setChips((cs) => [...cs, { uid, word, tones: t, pending: true, popping: false, form }]);
 
       // 300–600 ms: the picture flies to its place in the balloon.
       later(300, () => {
@@ -193,7 +206,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         if (!target) return;
         const to = toStageRect(target, scale);
         const circle = theme.mode === 'day' ? t.cardCircle : '#FFFFFF';
-        setFlights((f) => [...f, { uid, word, from, to, circle }]);
+        setFlights((f) => [...f, { uid, word, from, to, circle, form }]);
       });
     },
     [later, motion, scale, settings.tapGuardMs, settings.voiceURI, showPose, stopReading, theme.mode, tonesForWord],
@@ -207,10 +220,21 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       setChips((cs) => cs.map((c) => (c.uid === flight.uid ? { ...c, pending: false, popping: true } : c)));
       later(260, () => setChips((cs) => cs.map((c) => (c.uid === flight.uid ? { ...c, popping: false } : c))));
       showPose('hop', 420);
-      void sayWord(flight.word, settings.voiceURI);
+      void sayWord(spoken(flight.word, flight.form), settings.voiceURI);
     },
     [later, settings.voiceURI, showPose],
   );
+
+  // ------------------------------------------------ word forms (hold a card)
+  const openForms = useCallback(
+    (word: Word, card: HTMLElement) => {
+      unlockAudio();
+      lastActivity.current = Date.now();
+      setFormsFor({ word, rect: toStageRect(card, scale) });
+    },
+    [scale],
+  );
+  const longPressFor = (w: Word) => (settings.wordForms && wordForms(w).length ? openForms : undefined);
 
   // --------------------------------------------------------------- Oku
   const read = useCallback(async (fresh = false) => {
@@ -222,11 +246,11 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       showPose('look', 700);
       return;
     }
-    rememberSentence(list.map((c) => c.word.id));
+    rememberSentence(list.map(historyKey));
     setReadingIdx(0);
     if (motion) showPose('talk');
     const finished = await saySentence(
-      list.map((c) => c.word),
+      list.map((c) => spoken(c.word, c.form)),
       settings.voiceURI,
       (i) => setReadingIdx(i),
     );
@@ -241,19 +265,25 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   const recent = useMemo(
     () =>
       (history ?? [])
-        .map((ids) => ids.map((id) => words.find((w) => w.id === id)).filter((w): w is Word => !!w))
+        .map((keys) =>
+          keys.flatMap((key): Said[] => {
+            const [id, form] = key.split('::');
+            const word = words.find((w) => w.id === id);
+            return word ? [{ word, form: form || undefined }] : [];
+          }),
+        )
         .filter((ws) => ws.length > 0),
     [history, words],
   );
 
   /** Put a recent sentence back in the balloon and read it. */
   const replay = useCallback(
-    (ws: Word[]) => {
+    (ws: Said[]) => {
       setHistoryOpen(false);
       stopSpeaking();
       setReadingIdx(null);
       setFlights([]);
-      const next = ws.map((w) => ({ uid: nextUid(), word: w, tones: tonesForWord(w), pending: false, popping: false }));
+      const next = ws.map(({ word, form }) => ({ uid: nextUid(), word, form, tones: tonesForWord(word), pending: false, popping: false }));
       chipsRef.current = next;
       setChips(next);
       void read(true);
@@ -267,17 +297,17 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     lastActivity.current = Date.now();
     const list = chipsRef.current.filter((c) => !c.pending);
     if (!list.length || launching) return;
-    rememberSentence(list.map((c) => c.word.id));
+    rememberSentence(list.map(historyKey));
     stopSpeaking();
     setReadingIdx(null);
     const to = settings.sendTo?.address ?? '';
     if (isValidAddress(to)) {
       // Open Messages with the sentence written and addressed; the person taps send there.
       // This must happen inside the tap, or iOS blocks it.
-      window.location.href = smsUrl(to, sentenceText(list.map((c) => c.word)));
+      openMessages(smsUrl(to, sentenceText(list.map((c) => spoken(c.word, c.form)))));
     } else {
       void saySentence(
-        list.map((c) => c.word),
+        list.map((c) => spoken(c.word, c.form)),
         settings.voiceURI,
         () => undefined,
       );
@@ -550,7 +580,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       }}
     >
       {coreWords.map((w) => (
-        <CoreTile key={w.id} word={w} theme={theme} orientation={orientation} ring={ringId === w.id} ringColor={tonesForWord(w).base} onTap={tap} />
+        <CoreTile key={w.id} word={w} theme={theme} orientation={orientation} ring={ringId === w.id} ringColor={tonesForWord(w).base} onTap={tap} onLongPress={longPressFor(w)} />
       ))}
     </div>
   );
@@ -598,6 +628,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
               ring={ringId === w.id}
               jelly={jellyId === w.id}
               onTap={tap}
+              onLongPress={longPressFor(w)}
             />
           ) : (
             <div key={`empty-${i}`} aria-hidden="true" />
@@ -617,6 +648,80 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           }}
         />
       </div>
+
+      {formsFor &&
+        (() => {
+          const { word, rect } = formsFor;
+          const t = tonesForWord(word);
+          const options = [word.say, ...wordForms(word)];
+          const width = Math.min(stageW - 40, 560);
+          const left = Math.max(20, Math.min(stageW - width - 20, rect.x + rect.w / 2 - width / 2));
+          const above = rect.y > 300;
+          return (
+            <>
+              <div aria-hidden="true" onClick={() => setFormsFor(null)} style={{ position: 'absolute', inset: 0, zIndex: 22 }} />
+              <div
+                role="dialog"
+                aria-label={`${word.label}: çekimler`}
+                className={motion ? 'kb-pop' : undefined}
+                style={{
+                  position: 'absolute',
+                  zIndex: 23,
+                  left,
+                  width,
+                  boxSizing: 'border-box',
+                  ...(above ? { bottom: stageH - rect.y + 12 } : { top: rect.y + rect.h + 12 }),
+                  background: theme.surface,
+                  borderRadius: 30,
+                  boxShadow: `0 24px 48px ${theme.shadow(0.3)}, 0 0 0 4px ${t.base}, inset 0 -6px 0 ${theme.surfaceInset}`,
+                  padding: '14px 14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px' }}>
+                  <span style={{ width: 44, height: 44, borderRadius: '50%', background: t.cardCircle, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none' }}>
+                    <WordPicture picture={word.picture} label={word.label} size={36} color={t.base} />
+                  </span>
+                  <span style={{ flex: 1, fontSize: 22, fontWeight: 700, color: theme.text }}>{word.label}</span>
+                  <RoundIconButton label="Kapat" theme={theme} onClick={() => setFormsFor(null)}>
+                    <X size={22} strokeWidth={2.6} aria-hidden="true" />
+                  </RoundIconButton>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+                  {options.map((form, i) => (
+                    <button
+                      key={form + i}
+                      type="button"
+                      className="kb-press-small"
+                      onClick={(e) => {
+                        setFormsFor(null);
+                        tap(word, e.currentTarget, i === 0 ? undefined : form);
+                      }}
+                      style={{
+                        margin: 0,
+                        border: 0,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        minHeight: 60,
+                        padding: '0 14px',
+                        borderRadius: 20,
+                        background: i === 0 ? t.pill : theme.mode === 'day' ? theme.surfaceInset : theme.roundBtn,
+                        boxShadow: `inset 0 -4px 0 ${i === 0 ? t.pillInset : theme.mode === 'day' ? '#F6DCCB' : theme.roundBtnInset}`,
+                        fontSize: 24,
+                        fontWeight: 600,
+                        color: theme.text,
+                      }}
+                    >
+                      {form}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          );
+        })()}
 
       {historyOpen && (
         <>
@@ -668,7 +773,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
                   key={i}
                   type="button"
                   className="kb-press-small"
-                  aria-label={`Tekrar söyle: ${ws.map((w) => w.say).join(' ')}`}
+                  aria-label={`Tekrar söyle: ${ws.map((x) => x.form ?? x.word.say).join(' ')}`}
                   onClick={() => replay(ws)}
                   style={{
                     margin: 0,
@@ -686,7 +791,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
                     textAlign: 'left',
                   }}
                 >
-                  {ws.map((w, j) => {
+                  {ws.map(({ word: w, form }, j) => {
                     const t = tonesForWord(w);
                     return (
                       <span
@@ -696,7 +801,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
                         <span style={{ width: 38, height: 38, borderRadius: '50%', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                           <WordPicture picture={w.picture} label={w.label} size={32} color={t.base} />
                         </span>
-                        <span style={{ fontSize: 20, fontWeight: 600, color: theme.text, whiteSpace: 'nowrap' }}>{j === 0 ? upperFirstTr(w.say) : w.say}</span>
+                        <span style={{ fontSize: 20, fontWeight: 600, color: theme.text, whiteSpace: 'nowrap' }}>{j === 0 ? upperFirstTr(form ?? w.say) : (form ?? w.say)}</span>
                       </span>
                     );
                   })}

@@ -1,4 +1,4 @@
-import { forwardRef, type CSSProperties, type ReactNode } from 'react';
+import { forwardRef, useRef, type CSSProperties, type ReactNode } from 'react';
 import { ArrowUp, Delete, Hand, Trash2, Volume2 } from 'lucide-react';
 import type { Category, Word } from '../lib/data';
 import type { Theme, Tones } from '../lib/theme';
@@ -17,6 +17,51 @@ const resetButton: CSSProperties = {
   touchAction: 'manipulation',
   WebkitTapHighlightColor: 'transparent',
 };
+
+// ------------------------------------------------------------- long press
+
+const LONG_PRESS_MS = 450;
+
+/** Hold a card to open its word forms. A normal tap is untouched: the click
+ *  that follows a long press is swallowed, any other click goes through. */
+function useLongPress(onLong: ((el: HTMLElement) => void) | undefined) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fired = useRef(false);
+  const start = useRef({ x: 0, y: 0 });
+  const cancel = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  const handlers = onLong
+    ? {
+        onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+          fired.current = false;
+          start.current = { x: e.clientX, y: e.clientY };
+          const el = e.currentTarget;
+          cancel();
+          timer.current = setTimeout(() => {
+            fired.current = true;
+            timer.current = null;
+            onLong(el);
+          }, LONG_PRESS_MS);
+        },
+        onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
+          if (timer.current && Math.hypot(e.clientX - start.current.x, e.clientY - start.current.y) > 12) cancel();
+        },
+        onPointerUp: cancel,
+        onPointerLeave: cancel,
+        onPointerCancel: cancel,
+        onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+      }
+    : {};
+  /** True (once) if this click ends a long press and should be ignored. */
+  const consume = () => {
+    if (!fired.current) return false;
+    fired.current = false;
+    return true;
+  };
+  return { handlers, consume };
+}
 
 // ---------------------------------------------------------------- word card
 
@@ -46,16 +91,23 @@ interface WordCardProps {
   jelly: boolean;
   hiddenPicture?: boolean;
   onTap: (word: Word, circle: HTMLElement) => void;
+  /** Set when the word has forms and "Kelime çekimleri" is on. */
+  onLongPress?: (word: Word, card: HTMLElement) => void;
   children?: ReactNode;
 }
 
-export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture, onTap, children }: WordCardProps) {
+export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture, onTap, onLongPress, children }: WordCardProps) {
+  const lp = useLongPress(onLongPress ? (el) => onLongPress(word, el) : undefined);
   return (
     <button
       type="button"
       className={'kb-card' + (jelly ? ' kb-jelly' : '')}
-      aria-label={word.label}
-      onClick={(e) => onTap(word, (e.currentTarget.querySelector('[data-circle]') as HTMLElement) ?? e.currentTarget)}
+      aria-label={onLongPress ? `${word.label} (basılı tutunca çekimler)` : word.label}
+      {...lp.handlers}
+      onClick={(e) => {
+        if (lp.consume()) return;
+        onTap(word, (e.currentTarget.querySelector('[data-circle]') as HTMLElement) ?? e.currentTarget);
+      }}
       style={{
         ...resetButton,
         position: 'relative',
@@ -122,6 +174,7 @@ export function CoreTile({
   ring,
   ringColor,
   onTap,
+  onLongPress,
 }: {
   word: Word;
   theme: Theme;
@@ -129,15 +182,21 @@ export function CoreTile({
   ring: boolean;
   ringColor: string;
   onTap: (word: Word, circle: HTMLElement) => void;
+  onLongPress?: (word: Word, card: HTMLElement) => void;
 }) {
   const portrait = orientation === 'portrait';
   const circle = portrait ? 50 : 54;
+  const lp = useLongPress(onLongPress ? (el) => onLongPress(word, el) : undefined);
   return (
     <button
       type="button"
       className="kb-card"
       aria-label={word.label}
-      onClick={(e) => onTap(word, (e.currentTarget.querySelector('[data-circle]') as HTMLElement) ?? e.currentTarget)}
+      {...lp.handlers}
+      onClick={(e) => {
+        if (lp.consume()) return;
+        onTap(word, (e.currentTarget.querySelector('[data-circle]') as HTMLElement) ?? e.currentTarget);
+      }}
       style={{
         ...resetButton,
         height: portrait ? 100 : 90,
@@ -187,6 +246,8 @@ export interface ChipState {
   /** Reserved in the layout but not yet shown (the picture is flying in). */
   pending: boolean;
   popping: boolean;
+  /** A chosen word form (e.g. "kolum" for Kol); shown and spoken instead of word.say. */
+  form?: string;
 }
 
 export const SentenceChip = forwardRef<
@@ -235,7 +296,7 @@ export const SentenceChip = forwardRef<
         <WordPicture picture={chip.word.picture} label={chip.word.label} size={portrait ? 42 : 47} color={t.base} />
       </div>
       <span style={{ fontSize: portrait ? 26 : 30, fontWeight: 600, color: theme.text, lineHeight: 1, whiteSpace: 'nowrap' }}>
-        {first ? upperFirstTr(chip.word.say) : chip.word.say}
+        {first ? upperFirstTr(chip.form ?? chip.word.say) : (chip.form ?? chip.word.say)}
       </span>
       {reading && (
         <span

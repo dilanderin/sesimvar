@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-21 (late night)
+- **Kelime çekimleri** (Ayarlar → Görünüm, off by default): hold a card to choose a form of the word. Examples: **kolum, kollarım, koluma** (so "Kolum acıyor" works), **suyu, suya, suda**, **annem, anneme, annemle**, and for actions **geliyorum, geldim, gelsin, gelme**. All 45 built-in words that have forms were written by hand, so irregular ones are right (karın → karnım, su → suyu). A single tap works exactly as before. The chosen form is spoken, sent in Messages and kept in Son cümleler.
+- **Hazır resimler** in Kelime ekle: the ready-made pictures can be browsed without typing; tap one to fill in the word.
+
 ## 2026-11-21 (night)
 - **Gönder now sends a message.** In Ayarlar → **Gönder → Mesajlar**, enter the phone number or iMessage address of the person who should receive messages. After that, Gönder opens Messages with the sentence written and addressed to them; one tap on the send arrow sends it. "Deneme mesajı aç" tries it out. If the address is left empty, Gönder speaks the sentence as before.
 - **Oku and Gönder line up with the speech balloon** in landscape (they used to sit lower than it).

@@ -30,3 +30,19 @@ function isAppleDevice(): boolean {
   if (typeof navigator === 'undefined') return true;
   return /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
 }
+
+declare global {
+  interface Window {
+    /** Tests can set this to see the Messages link instead of opening it. */
+    __sesimvarOpenUrl?: (url: string) => void;
+  }
+}
+
+/** Open Messages. Must be called inside a tap, or iOS blocks it. */
+export function openMessages(url: string) {
+  if (typeof window.__sesimvarOpenUrl === 'function') {
+    window.__sesimvarOpenUrl(url);
+    return;
+  }
+  window.location.href = url;
+}

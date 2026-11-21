@@ -35,7 +35,7 @@ On the iPad, open the built site in Safari and use **Share → Add to Home Scree
 - **Kelime ekle (add a word)**: the picture can be an ARASAAC pictogram (searched online and then stored on the device), a photo from the camera, or text only. You can also record the word in a family member's voice.
 - **Kelimeler (words)**: show or hide each word, drag the handle to reorder, record or remove a family voice, and delete words you added.
 - **Hep görünen satır**: choose which six words appear in the always-visible row.
-- **Görünüm (appearance)**: card size, day/night, protection against accidental repeat taps, and motion on or off.
+- **Görünüm (appearance)**: card size, day/night, protection against accidental repeat taps, **Kelime çekimleri** (hold a card for forms like kolum, suya, gelme), and motion on or off.
 - **Yedek (backup)**: **Yedekle** saves the whole board, including recordings and photos, into one `.json` file. On iPad it opens the share sheet so you can save it to Files or iCloud Drive. **Geri yükle** restores a backup file after asking for confirmation.
 - **Gönder → Mesajlar**: the phone number or iMessage address that Gönder writes to, with a test button.
 - **Ses ve papağan (voice and parrot)**: speech speed (Yavaş / Normal / Hızlı); pick the Turkish voice (Yelda on iOS) and preview it, and rename the parrot. Family recordings always play instead of the synthetic voice.
