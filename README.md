@@ -36,6 +36,7 @@ On the iPad, open the built site in Safari and use **Share → Add to Home Scree
 - **Kelimeler (words)**: show or hide each word, drag the handle to reorder, record or remove a family voice, and delete words you added.
 - **Hep görünen satır**: choose which six words appear in the always-visible row.
 - **Görünüm (appearance)**: card size, day/night, and motion on or off.
+- **Yedek (backup)**: **Yedekle** saves the whole board, including recordings and photos, into one `.json` file. On iPad it opens the share sheet so you can save it to Files or iCloud Drive. **Geri yükle** restores a backup file after asking for confirmation.
 - **Ses ve papağan (voice and parrot)**: pick the Turkish voice (Yelda on iOS) and preview it, and rename the parrot. Family recordings always play instead of the synthetic voice.
 
 ## How it's built

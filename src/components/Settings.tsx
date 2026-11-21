@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import {
   Camera,
   ChevronLeft,
+  Download,
   GripVertical,
   Image as ImageIcon,
   Lock,
@@ -12,9 +13,11 @@ import {
   Square,
   Trash2,
   Type,
+  Upload,
   X,
 } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, defaultSay, freeSlot, newWordId, type CategoryId, type Picture, type Word } from '../lib/data';
+import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, summarize } from '../lib/backup';
 import { mix } from '../lib/color';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
 import { useRecorder, type Take } from '../lib/recorder';
@@ -987,6 +990,105 @@ function VoiceAndParrot() {
   );
 }
 
+// ------------------------------------------------------------------ backup
+
+function Backup() {
+  const [busy, setBusy] = useState<'save' | 'restore' | null>(null);
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const save = async () => {
+    setBusy('save');
+    setMessage(null);
+    try {
+      const { file, missing } = await createBackup();
+      const how = await saveBackupFile(file);
+      const size = file.size > 1024 * 1024 ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`;
+      if (how === 'cancelled') setMessage({ text: 'Yedekleme iptal edildi.' });
+      else
+        setMessage({
+          text:
+            (how === 'shared' ? `Yedek hazır (${size}). Dosyalar'a veya iCloud Drive'a kaydettiyseniz tamam.` : `Yedek indirildi: ${file.name} (${size}).`) +
+            (missing ? ` ${missing} dosya bulunamadı ve yedeğe girmedi.` : ''),
+        });
+    } catch {
+      setMessage({ text: 'Yedek oluşturulamadı. Tekrar deneyin.', error: true });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const restore = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy('restore');
+    setMessage(null);
+    try {
+      const backup = parseBackup(JSON.parse(await file.text()));
+      const { words, recordings, createdAt } = summarize(backup);
+      const when = new Date(createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (!confirm(`${when} tarihli yedek yüklensin mi?\n\n${words} kelime, ${recordings} ses kaydı.\nBu iPad'deki şimdiki tahta yedektekiyle değiştirilecek.`)) {
+        setMessage({ text: 'Geri yükleme iptal edildi.' });
+        return;
+      }
+      await restoreBackup(backup);
+      setMessage({ text: `Yedek geri yüklendi: ${words} kelime, ${recordings} ses kaydı.` });
+    } catch (e) {
+      setMessage({ text: e instanceof BackupError ? e.message : 'Dosya okunamadı. Doğru yedek dosyasını seçtiğinizden emin olun.', error: true });
+    } finally {
+      setBusy(null);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const action: CSSProperties = {
+    ...btn,
+    flex: 1,
+    height: 48,
+    borderRadius: 16,
+    fontSize: 17,
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  };
+
+  return (
+    <Card title="Yedek">
+      <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
+        Kelimeler, ayarlar, ses kayıtları ve fotoğraflar tek bir dosyaya kaydedilir. Dosyayı Dosyalar'da veya iCloud Drive'da saklayın; iPad değişirse ya da
+        uygulama silinirse buradan geri yükleyin.
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={!!busy}
+          style={{ ...action, background: C.orange, color: '#FFFFFF', boxShadow: `inset 0 -5px 0 ${C.orangeInset}`, opacity: busy ? 0.6 : 1 }}
+        >
+          <Download size={20} strokeWidth={2.6} aria-hidden="true" />
+          {busy === 'save' ? 'Hazırlanıyor…' : 'Yedekle'}
+        </button>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={!!busy}
+          style={{ ...action, background: C.soft, color: C.text, boxShadow: `inset 0 -4px 0 ${C.line}`, opacity: busy ? 0.6 : 1 }}
+        >
+          <Upload size={20} strokeWidth={2.6} aria-hidden="true" />
+          {busy === 'restore' ? 'Yükleniyor…' : 'Geri yükle'}
+        </button>
+        <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => void restore(e.target.files?.[0])} />
+      </div>
+      {message && (
+        <div role="status" style={{ fontSize: 14, fontWeight: 600, color: message.error ? '#B3261E' : C.muted, lineHeight: 1.4 }}>
+          {message.text}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ---------------------------------------------------------------- screen
 
 export function Settings({ onClose }: { onClose: () => void }) {
@@ -1080,7 +1182,12 @@ export function Settings({ onClose }: { onClose: () => void }) {
       >
         <div className="kb-noscrollbar" style={{ display: 'flex', flexDirection: 'column', gap: 18, minHeight: 0, overflowY: 'auto', paddingBottom: 12 }}>
           <AddWord people={people} />
-          {portrait && <CoreRowEditor />}
+          {portrait && (
+            <>
+              <CoreRowEditor />
+              <Backup />
+            </>
+          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, gap: 18 }}>
           <WordList people={people} />
@@ -1096,6 +1203,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <CoreRowEditor />
             <Appearance />
             <VoiceAndParrot />
+            <Backup />
           </div>
         )}
       </div>

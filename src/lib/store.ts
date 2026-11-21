@@ -175,3 +175,13 @@ export async function deleteBlob(key: string) {
 export function newBlobKey(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
+
+export async function getBlob(key: string): Promise<Blob | undefined> {
+  return get<Blob>(`blob:${key}`);
+}
+
+/** Replace the whole board (used when restoring a backup). */
+export function replaceState(next: AppState) {
+  state = next;
+  emit();
+}
