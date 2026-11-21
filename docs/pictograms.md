@@ -21,12 +21,21 @@ The recurring character has short brown hair and a blue t-shirt. Body-part pictu
 
 evet hayir istiyorum yok bitti daha · oldu var istemiyorum yardim tamam bilmiyorum ben ne nerede kim simdi sonra · bugun yarin dun · anne baba arkadas doktor kisiler · gel git al ver getir bak oyna izle ara bekle yap gonder gidelim geldi gitti ac kapat · su yemek aciktim susadim cay ekmek tuvalet banyo uyku yoruldum usudum sicak · kol bacak aciyor kasiniyor kizardi dustu kirildi hasta bas karin dis ilac
 
-## To do (50)
+## To do (54)
 
 - Vücut extras: hastalandi goz kulak el bogaz sirt ayak kan vurdum oksuruk ates iyi
 - Duygu: mutlu uzgun sikildim seviyorum ozledim guzel korktum kizgin
-- Ekran: minecraft oyun film cizgi-film haberler internet muzik video, plus the category icon `ekran`
+- Ekran: minecraft oyun youtube netflix film dizi cizgi-film haberler internet muzik video, plus the category icon `ekran`. Don't copy brand logos: draw YouTube as a red rounded play-button screen (a generic video player), Netflix as a TV with popcorn, and Dizi as a TV showing episode frames.
 - Eşyalar: tablet telefon oyun-kolu sarj-kablosu calismiyor bozuk lego televizyon bilgisayar kulaklik kumanda sarj-bitti araba para
-- Yerler: eve koy hastane park market disari kayboldu
+- Yerler: eve koy elazig hastane park market disari kayboldu. Draw Elazığ as a hometown: a small city skyline with a map pin.
 
 The relatives (Amca, Hala, Teyze, Dayı) and Dilan keep "add a photo" cards on purpose.
+
+## Words from the first version's board
+
+These go on the board (not only in the library) where the category has room:
+- Ekran: Oyun, YouTube, Netflix, Film, Dizi, Çizgi film, Haberler, joining Minecraft, İzle and Oyna (10 of 12).
+- Yerler: Köy and Elazığ, joining Eve.
+
+Vücut (Vurdum, Hastalandı, İyi) and Eşyalar (Araba) are full, so those go in the library.
+Saved boards gain new built-in words automatically when the word's place is free.
