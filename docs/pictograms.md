@@ -4,6 +4,13 @@ The app's own pictograms live in `public/pictos/v2/` (256×256 transparent PNG).
 
 A seed word uses `pictos/v2/<stem>.png` automatically when that file exists (see `pictoSrc` and `V2_PICTOS` in `src/lib/data.ts`). Boards saved earlier pick up new pictures on the next launch (`refreshSeedPictures`). Extra words that are not on the board go in `LIBRARY`.
 
+## Adding new ones
+
+1. Generate each picture in the Figma file with the style prompt below. Each result's thumbnail is saved locally as a JPG under the session's `tool-results` folder.
+2. List them in a TSV file, one `stem<TAB>path` per line, and run `python3 scripts/add-pictos.py map.tsv`.
+3. Add any word that isn't on the board to `LIBRARY` in `src/lib/data.ts`.
+4. Run `npm test` and `npm run build`, then push. Cloudflare Pages deploys `main` automatically.
+
 ## Style prompt (style 4, "outlined")
 
 > AAC pictogram, OUTLINED style. Subject: "<english gloss>" — <what to draw, following the ARASAAC composition>. Style: friendly sticker-like picture symbol with bold, even, dark-brown outlines (#3A2420, thick consistent line weight, rounded caps) around every shape, flat bright color fills with at most one simple highlight, clean and bold like a children's picture-symbol set. Palette: <colours from the app palette>. Single centered subject filling about 85% of the frame, instantly readable at small size, no text, no letters, plain pure white background.
