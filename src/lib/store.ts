@@ -23,7 +23,7 @@ export interface AppState {
   settings: Settings;
 }
 
-const STORAGE_KEY = 'kelimelerim:v1';
+const STORAGE_KEY = 'sesimvar:v1';
 
 function prefersReducedMotion(): boolean {
   return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;

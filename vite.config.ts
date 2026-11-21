@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['pictos/*', 'icon.svg'],
       manifest: {
-        name: 'Kelimelerim',
-        short_name: 'Kelimelerim',
+        name: 'Sesim Var',
+        short_name: 'Sesim Var',
         description: 'Resimlerle konuşma tahtası',
         lang: 'tr',
         display: 'fullscreen',

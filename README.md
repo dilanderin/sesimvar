@@ -1,8 +1,10 @@
-# Kelimelerim
+# Sesim Var
 
-A picture-based talking board (AAC) in Turkish, built from the *Kelimelerim* design canvas. The child taps pictures to build a sentence in the speech balloon. **Oku** reads it aloud word by word, and **Gönder** sends it off with a small celebration. Pırpır the parrot reacts to every step.
+**Sesim Var** ("I have a voice") is a picture-based talking board (AAC) in Turkish, built from the original design canvas. The child taps pictures to build a sentence in the speech balloon. **Oku** reads it aloud word by word, and **Gönder** sends it off with a small celebration. Pırpır the parrot reacts to every step.
 
 It runs entirely on the device. There are no accounts and no ads, and the family's words, photos and voice recordings never leave the iPad.
+
+Live at https://sesimvar.d3asoft.com
 
 ## Running it
 
@@ -47,4 +49,4 @@ On the iPad, open the built site in Safari and use **Share → Add to Home Scree
 
 ## Credits
 
-Most pictograms in `public/pictos/*.png` and the pictures fetched in Ayarlar come from ARASAAC (arasaac.org): author Sergio Palao, owner Gobierno de Aragón (Spain), licence CC BY-NC-SA. The SVG pictograms in `public/pictos/*.svg` and the parrot are the redrawn versions from the Kelimelerim design.
+Most pictograms in `public/pictos/*.png` and the pictures fetched in Ayarlar come from ARASAAC (arasaac.org): author Sergio Palao, owner Gobierno de Aragón (Spain), licence CC BY-NC-SA. The SVG pictograms in `public/pictos/*.svg` and the parrot are the redrawn versions from the original design.
