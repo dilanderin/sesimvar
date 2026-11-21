@@ -15,11 +15,23 @@ export interface Settings {
   locked: boolean;
   /** The six word ids of the always-visible row, left to right. */
   core: string[];
+  /** How fast the device voice reads. */
+  speechRate: SpeechRate;
+  /** Ignore another card tap within this many ms (0 = off), for unsteady hands. */
+  tapGuardMs: TapGuard;
 }
+
+export type SpeechRate = 'slow' | 'normal' | 'fast';
+export type TapGuard = 0 | 500 | 1000;
+
+/** Most recent first; each sentence is a list of word ids. */
+export const HISTORY_LIMIT = 12;
 
 export interface AppState {
   version: 1;
   words: Word[];
+  /** Recently read or sent sentences (word ids), newest first. */
+  history: string[][];
   settings: Settings;
 }
 
@@ -34,6 +46,7 @@ export function initialState(): AppState {
   return {
     version: 1,
     words,
+    history: [],
     settings: {
       size: 'medium',
       theme: 'auto',
@@ -42,6 +55,8 @@ export function initialState(): AppState {
       parrotName: 'Pırpır',
       locked: true,
       core: words.filter((w) => w.category === 'core').map((w) => w.id),
+      speechRate: 'normal',
+      tapGuardMs: 0,
     },
   };
 }
@@ -198,4 +213,19 @@ export async function getBlob(key: string): Promise<Blob | undefined> {
 export function replaceState(next: AppState) {
   state = next;
   emit();
+}
+
+/** Remember a sentence that was read or sent (skips an exact repeat of the latest). */
+export function rememberSentence(ids: string[]) {
+  if (!ids.length) return;
+  setState((s) => {
+    const prev = s.history ?? [];
+    if (prev[0] && prev[0].join('|') === ids.join('|')) return s;
+    const rest = prev.filter((h) => h.join('|') !== ids.join('|'));
+    return { ...s, history: [ids, ...rest].slice(0, HISTORY_LIMIT) };
+  });
+}
+
+export function clearHistory() {
+  setState((s) => ({ ...s, history: [] }));
 }

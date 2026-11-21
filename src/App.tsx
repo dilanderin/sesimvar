@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Board } from './components/Board';
 import { Settings } from './components/Settings';
 import { Stage } from './components/Stage';
+import { setSpeechRate } from './lib/speech';
 import { useAppState, type ThemeChoice } from './lib/store';
 import { DAY, NIGHT, type Theme } from './lib/theme';
 
@@ -26,6 +27,7 @@ function useTheme(choice: ThemeChoice): Theme {
 export default function App() {
   const { settings } = useAppState();
   const theme = useTheme(settings.theme);
+  useEffect(() => setSpeechRate(settings.speechRate), [settings.speechRate]);
   const [screen, setScreen] = useState<'board' | 'settings'>(() => (location.hash === '#ayarlar' ? 'settings' : 'board'));
 
   useEffect(() => {

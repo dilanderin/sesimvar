@@ -21,7 +21,7 @@ import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, 
 import { mix } from '../lib/color';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
 import { useRecorder, type Take } from '../lib/recorder';
-import { onVoicesChanged, pickVoice, previewVoice, turkishVoices } from '../lib/speech';
+import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, turkishVoices } from '../lib/speech';
 import {
   addWord,
   deleteBlob,
@@ -33,6 +33,8 @@ import {
   updateWord,
   useAppState,
   type CardSize,
+  type SpeechRate,
+  type TapGuard,
   type ThemeChoice,
 } from '../lib/store';
 import { formatDuration, lowerTr, voiceLabel } from '../lib/turkish';
@@ -925,6 +927,20 @@ function Appearance() {
           ]}
         />
       </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={fieldLabel}>Yanlışlıkla dokunma koruması</span>
+        <Segmented<'0' | '500' | '1000'>
+          label="Yanlışlıkla dokunma koruması"
+          value={String(settings.tapGuardMs) as '0' | '500' | '1000'}
+          onChange={(v) => updateSettings({ tapGuardMs: Number(v) as TapGuard })}
+          options={[
+            { value: '0', label: 'Kapalı' },
+            { value: '500', label: 'Yarım sn' },
+            { value: '1000', label: '1 sn' },
+          ]}
+        />
+        <span style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>Bir karta dokunduktan sonra bu süre içindeki dokunuşlar yok sayılır. Eli titreyenler için.</span>
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 600 }}>Hareket ve animasyon</div>
@@ -974,6 +990,23 @@ function VoiceAndParrot() {
         >
           <Play size={16} aria-hidden="true" /> Dinle
         </button>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={fieldLabel}>Konuşma hızı</span>
+        <Segmented<SpeechRate>
+          label="Konuşma hızı"
+          value={settings.speechRate}
+          onChange={(speechRate) => {
+            updateSettings({ speechRate });
+            setSpeechRate(speechRate);
+            previewVoice(settings.voiceURI, settings.parrotName);
+          }}
+          options={[
+            { value: 'slow', label: 'Yavaş' },
+            { value: 'normal', label: 'Normal' },
+            { value: 'fast', label: 'Hızlı' },
+          ]}
+        />
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>

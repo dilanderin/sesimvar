@@ -8,6 +8,14 @@ const synth: SpeechSynthesis | null = typeof window !== 'undefined' && 'speechSy
 let audio: HTMLAudioElement | null = null;
 let unlocked = false;
 let token = 0;
+let rate = 0.95;
+
+const RATES = { slow: 0.75, normal: 0.95, fast: 1.15 } as const;
+
+/** Set how fast the device voice reads (from Ayarlar). */
+export function setSpeechRate(r: keyof typeof RATES) {
+  rate = RATES[r] ?? 0.95;
+}
 
 function sharedAudio(): HTMLAudioElement {
   if (!audio) {
@@ -74,7 +82,7 @@ function speakText(text: string, voiceURI: string | null, my: number): Promise<v
     const voice = pickVoice(voiceURI);
     if (voice) u.voice = voice;
     u.lang = voice?.lang ?? 'tr-TR';
-    u.rate = 0.95;
+    u.rate = rate;
     let done = false;
     const finish = () => {
       if (done) return;
@@ -84,7 +92,7 @@ function speakText(text: string, voiceURI: string | null, my: number): Promise<v
     u.onend = finish;
     u.onerror = finish;
     // Safety net: some browsers never fire onend.
-    setTimeout(finish, 600 + text.length * 160);
+    setTimeout(finish, 600 + (text.length * 160) / rate);
     synth.speak(u);
   });
 }

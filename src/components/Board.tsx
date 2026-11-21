@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Check, Settings as SettingsIcon } from 'lucide-react';
+import { Check, History, Settings as SettingsIcon, X } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, SLOTS_PER_CATEGORY, type Category, type CategoryId, type Word } from '../lib/data';
 import { DECOR } from '../lib/decor';
 import { saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
-import { useAppState } from '../lib/store';
+import { clearHistory, rememberSentence, useAppState } from '../lib/store';
 import { tones, type Theme, type Tones } from '../lib/theme';
 import {
   ActionButton,
@@ -20,6 +20,8 @@ import {
 } from './BoardParts';
 import { Confetti, Flyer, Sparkles } from './Effects';
 import { Parrot, ParrotLeaf, type ParrotPose } from './Parrot';
+import { WordPicture } from './WordPicture';
+import { upperFirstTr } from '../lib/turkish';
 import { STAGE, toStageRect, useStage } from './Stage';
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -39,7 +41,7 @@ const IDLE_BEFORE_CHEEKY_MS = 25_000;
 const SETTINGS_HOLD_MS = 2_000;
 
 export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings: () => void }) {
-  const { words, settings } = useAppState();
+  const { words, settings, history } = useAppState();
   const { orientation, scale } = useStage();
   const portrait = orientation === 'portrait';
   const motion = settings.motion;
@@ -78,6 +80,8 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   const chipsRef = useRef(chips);
   chipsRef.current = chips;
   const lastActivity = useRef(Date.now());
+  const lastTapAt = useRef(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const poseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /** Show a pose, then drift back to idle. */
@@ -154,7 +158,11 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   const tap = useCallback(
     (word: Word, circleEl: HTMLElement) => {
       unlockAudio();
-      lastActivity.current = Date.now();
+      const now = Date.now();
+      // Accidental-tap protection: ignore another card tap that comes too soon.
+      if (settings.tapGuardMs && now - lastTapAt.current < settings.tapGuardMs) return;
+      lastTapAt.current = now;
+      lastActivity.current = now;
       stopReading();
       const t = tonesForWord(word);
       const uid = nextUid();
@@ -187,7 +195,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         setFlights((f) => [...f, { uid, word, from, to, circle }]);
       });
     },
-    [later, motion, scale, settings.voiceURI, showPose, stopReading, theme.mode, tonesForWord],
+    [later, motion, scale, settings.tapGuardMs, settings.voiceURI, showPose, stopReading, theme.mode, tonesForWord],
   );
 
   // 600–850 ms: the chip lands with a pop, the parrot hops and says the word.
@@ -204,15 +212,16 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   );
 
   // --------------------------------------------------------------- Oku
-  const read = useCallback(async () => {
+  const read = useCallback(async (fresh = false) => {
     unlockAudio();
     lastActivity.current = Date.now();
-    if (readingIdx !== null) return stopReading();
+    if (!fresh && readingIdx !== null) return stopReading();
     const list = chipsRef.current.filter((c) => !c.pending);
     if (!list.length) {
       showPose('look', 700);
       return;
     }
+    rememberSentence(list.map((c) => c.word.id));
     setReadingIdx(0);
     if (motion) showPose('talk');
     const finished = await saySentence(
@@ -227,12 +236,37 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     });
   }, [later, motion, readingIdx, settings.voiceURI, showPose, stopReading]);
 
+  // ------------------------------------------------- Son cümleler (history)
+  const recent = useMemo(
+    () =>
+      (history ?? [])
+        .map((ids) => ids.map((id) => words.find((w) => w.id === id)).filter((w): w is Word => !!w))
+        .filter((ws) => ws.length > 0),
+    [history, words],
+  );
+
+  /** Put a recent sentence back in the balloon and read it. */
+  const replay = useCallback(
+    (ws: Word[]) => {
+      setHistoryOpen(false);
+      stopSpeaking();
+      setReadingIdx(null);
+      setFlights([]);
+      const next = ws.map((w) => ({ uid: nextUid(), word: w, tones: tonesForWord(w), pending: false, popping: false }));
+      chipsRef.current = next;
+      setChips(next);
+      void read(true);
+    },
+    [read, tonesForWord],
+  );
+
   // ------------------------------------------------------------- Gönder
   const send = useCallback(() => {
     unlockAudio();
     lastActivity.current = Date.now();
     const list = chipsRef.current.filter((c) => !c.pending);
     if (!list.length || launching) return;
+    rememberSentence(list.map((c) => c.word.id));
     stopSpeaking();
     setReadingIdx(null);
     void saySentence(
@@ -387,6 +421,9 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           </span>
         ))}
       </div>
+      <RoundIconButton label="Son cümleler" theme={theme} onClick={() => setHistoryOpen((o) => !o)}>
+        <History size={22} strokeWidth={2.4} aria-hidden="true" />
+      </RoundIconButton>
       <RoundIconButton label="Son kelimeyi sil" theme={theme} onClick={backspace}>
         <BackspaceIcon />
       </RoundIconButton>
@@ -397,7 +434,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   );
 
   const okuBtn = (
-    <ActionButton kind="oku" theme={theme} orientation={orientation} active={readingIdx !== null} disabled={!chips.length} onClick={read} />
+    <ActionButton kind="oku" theme={theme} orientation={orientation} active={readingIdx !== null} disabled={!chips.length} onClick={() => void read()} />
   );
   const gonderBtn = (
     <ActionButton kind="gonder" theme={theme} orientation={orientation} launching={launching} disabled={!chips.length} onClick={send} />
@@ -572,6 +609,95 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           }}
         />
       </div>
+
+      {historyOpen && (
+        <>
+          <div aria-hidden="true" onClick={() => setHistoryOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 20 }} />
+          <div
+            role="dialog"
+            aria-label="Son cümleler"
+            className={motion ? 'kb-pop' : undefined}
+            style={{
+              position: 'absolute',
+              zIndex: 21,
+              top: portrait ? 214 : 196,
+              left: portrait ? 22 : 190,
+              right: portrait ? 22 : 318,
+              maxHeight: portrait ? 560 : 440,
+              display: 'flex',
+              flexDirection: 'column',
+              background: theme.surface,
+              borderRadius: 32,
+              boxShadow: `0 24px 48px ${theme.shadow(0.28)}, inset 0 -6px 0 ${theme.surfaceInset}`,
+              padding: '16px 16px 18px',
+              transformOrigin: 'top center',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 6px 10px' }}>
+              <History size={22} strokeWidth={2.6} color={theme.muted} aria-hidden="true" />
+              <span style={{ flex: 1, fontSize: 22, fontWeight: 700, color: theme.text }}>Son cümleler</span>
+              {recent.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => clearHistory()}
+                  style={{ margin: 0, border: 0, background: 'transparent', color: theme.muted, fontFamily: 'inherit', fontSize: 16, fontWeight: 600, padding: '10px 8px', cursor: 'pointer' }}
+                >
+                  Temizle
+                </button>
+              )}
+              <RoundIconButton label="Kapat" theme={theme} onClick={() => setHistoryOpen(false)}>
+                <X size={22} strokeWidth={2.6} aria-hidden="true" />
+              </RoundIconButton>
+            </div>
+            <div className="kb-noscrollbar" style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {recent.length === 0 && (
+                <p style={{ margin: '8px 6px 4px', fontSize: 18, fontWeight: 500, color: theme.muted, lineHeight: 1.4 }}>
+                  Henüz cümle yok. Oku ya da Gönder’e basınca cümleler burada görünür; bir dokunuşla tekrar söylenir.
+                </p>
+              )}
+              {recent.map((ws, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="kb-press-small"
+                  aria-label={`Tekrar söyle: ${ws.map((w) => w.say).join(' ')}`}
+                  onClick={() => replay(ws)}
+                  style={{
+                    margin: 0,
+                    border: 0,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 8,
+                    minHeight: 64,
+                    padding: '8px 12px',
+                    borderRadius: 22,
+                    background: theme.mode === 'day' ? theme.surfaceInset : theme.roundBtn,
+                    textAlign: 'left',
+                  }}
+                >
+                  {ws.map((w, j) => {
+                    const t = tonesForWord(w);
+                    return (
+                      <span
+                        key={j}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 48, padding: '0 14px 0 6px', borderRadius: 18, background: t.pill, flex: 'none' }}
+                      >
+                        <span style={{ width: 38, height: 38, borderRadius: '50%', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          <WordPicture picture={w.picture} label={w.label} size={32} color={t.base} />
+                        </span>
+                        <span style={{ fontSize: 20, fontWeight: 600, color: theme.text, whiteSpace: 'nowrap' }}>{j === 0 ? upperFirstTr(w.say) : w.say}</span>
+                      </span>
+                    );
+                  })}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {sparkles.map((s) => (
         <Sparkles key={s.id} rect={s.rect} color={s.color} />

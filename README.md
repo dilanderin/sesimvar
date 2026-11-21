@@ -20,7 +20,7 @@ On the iPad, open the built site in Safari and use **Share → Add to Home Scree
 ## What's in it
 
 **Main screen** (landscape 1194×834 and portrait 834×1194, scaled to fit any screen)
-- Sentence balloon with backspace and clear buttons. The first word is capitalised, and names keep their capital letter.
+- Sentence balloon with backspace and clear buttons, plus **Son cümleler**: the last 12 sentences that were read or sent, each one tap away from being said again. The first word is capitalised, and names keep their capital letter.
 - **Oku** (karaoke reading): each word lifts and is underlined in its category colour as it is spoken, while the parrot "talks".
 - **Gönder**: the arrow shoots up, 40 pieces of confetti fall in the nine category colours, the parrot jumps, then the balloon empties and shows "Gönderildi".
 - An always-visible row of six words (Evet, Hayır, İstiyorum, Yok, Bitti, Daha) that stays in the same place on every screen.
@@ -35,9 +35,9 @@ On the iPad, open the built site in Safari and use **Share → Add to Home Scree
 - **Kelime ekle (add a word)**: the picture can be an ARASAAC pictogram (searched online and then stored on the device), a photo from the camera, or text only. You can also record the word in a family member's voice.
 - **Kelimeler (words)**: show or hide each word, drag the handle to reorder, record or remove a family voice, and delete words you added.
 - **Hep görünen satır**: choose which six words appear in the always-visible row.
-- **Görünüm (appearance)**: card size, day/night, and motion on or off.
+- **Görünüm (appearance)**: card size, day/night, protection against accidental repeat taps, and motion on or off.
 - **Yedek (backup)**: **Yedekle** saves the whole board, including recordings and photos, into one `.json` file. On iPad it opens the share sheet so you can save it to Files or iCloud Drive. **Geri yükle** restores a backup file after asking for confirmation.
-- **Ses ve papağan (voice and parrot)**: pick the Turkish voice (Yelda on iOS) and preview it, and rename the parrot. Family recordings always play instead of the synthetic voice.
+- **Ses ve papağan (voice and parrot)**: speech speed (Yavaş / Normal / Hızlı); pick the Turkish voice (Yelda on iOS) and preview it, and rename the parrot. Family recordings always play instead of the synthetic voice.
 
 ## How it's built
 
