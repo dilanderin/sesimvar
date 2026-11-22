@@ -26,8 +26,8 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 - [x] **Speech speed** (pitch still to do) in Ses ve papağan.
 - [x] **Word forms** (Turkish suffixes, in `src/lib/forms.ts`; add forms for new built-in words there): long-press a card to choose suya, suyu, suda… Keep a single tap working exactly as now.
 - [x] **Library browser** in Kelime ekle: show the ready-made pictures by category, not only by typing.
-- [ ] **More vocabulary in the library**: common verbs (iç, ye, uyu, otur, kalk), describing words (büyük, küçük, sıcak, soğuk, çok, az), feelings and needs, each with a pictogram.
-- [ ] **Larger boards option**: a second page per category, off by default. It must not change the first page.
+- [ ] **Larger boards option (next, most needed)**: a second page per category, off by default. It must not change the first page. Temel, Eylem, Günlük, Vücut and Eşyalar are full (12/12), so most library words can't be added to their own category yet.
+- [x] **More vocabulary in the library**: İç, Ye, Otur, Kalk, Dur, Uyu, Sarıl, Büyük, Küçük, Çok, Az, Soğuk (2026-11-22). More could follow: needs (yıka, giy, aç/kapat ışık), feelings.
 - [ ] **Usage-aware suggestions** (local only): in Ayarlar, show words the family often types but that are not on the board yet.
 - [ ] **Accessibility**: VoiceOver labels audit, switch/keyboard scanning, high-contrast option.
 - [ ] **Performance**: lighter first load, image lazy-loading in Ayarlar.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-22 (morning)
+- **12 new everyday words** in the ready-made pictures, each with a new picture: **İç, Ye, Otur, Kalk, Dur, Uyu, Sarıl, Büyük, Küçük, Çok, Az, Soğuk.** Type them in Kelime ekle, or pick them from the row.
+- **The ready-made pictures follow the chosen category:** choose Eylem and Eylem's pictures come first.
+
 ## 2026-11-22
 - **Every picture is now in the new outlined style:** Eşyalar, Duygu, Ekran, Yerler and all the category icons, 121 pictures in total.
 - **More words on the board.** Ekran: Oyun, YouTube, Netflix, Film, Dizi, Çizgi film, Haberler. Yerler: Köy, Elazığ. If the app is already installed, these appear by themselves wherever their place is free. Nothing that was there moves.

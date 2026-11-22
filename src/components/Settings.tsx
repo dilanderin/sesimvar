@@ -612,7 +612,10 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={fieldLabel}>Hazır resimler</span>
           <div className="kb-noscrollbar" style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-            {LIBRARY.filter((item) => !words.some((w) => w.label === item.label)).map((item) => (
+            {LIBRARY.filter((item) => !words.some((w) => w.label === item.label))
+              // The chosen category's pictures come first.
+              .sort((a, b) => Number(b.category === category) - Number(a.category === category))
+              .map((item) => (
               <button
                 key={item.src}
                 type="button"

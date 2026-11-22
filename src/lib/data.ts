@@ -169,7 +169,7 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
 
 /** Pictograms redrawn for Sesim Var (outlined style), by file stem. Seed
  *  words use one of these when it exists, otherwise their original picture. */
-export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'al', 'anne', 'ara', 'araba', 'arkadas', 'ates', 'ayak', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'bekle', 'ben', 'bilgisayar', 'bilmiyorum', 'bitti', 'bogaz', 'bozuk', 'bugun', 'calismiyor', 'cay', 'cizgi-film', 'daha', 'dis', 'disari', 'dizi', 'doktor', 'dun', 'dustu', 'ekmek', 'ekran', 'el', 'elazig', 'eve', 'evet', 'film', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'gonder', 'goz', 'guzel', 'haberler', 'hasta', 'hastalandi', 'hastane', 'hayir', 'ilac', 'internet', 'istemiyorum', 'istiyorum', 'iyi', 'izle', 'kan', 'kapat', 'karin', 'kasiniyor', 'kayboldu', 'kim', 'kirildi', 'kisiler', 'kizardi', 'kizgin', 'kol', 'korktum', 'koy', 'kulak', 'kulaklik', 'kumanda', 'lego', 'market', 'minecraft', 'mutlu', 'muzik', 'ne', 'nerede', 'netflix', 'oksuruk', 'oldu', 'oyna', 'oyun', 'oyun-kolu', 'ozledim', 'para', 'park', 'sarj-bitti', 'sarj-kablosu', 'seviyorum', 'sicak', 'sikildim', 'simdi', 'sirt', 'sonra', 'su', 'susadim', 'tablet', 'tamam', 'telefon', 'televizyon', 'tuvalet', 'usudum', 'uyku', 'uzgun', 'var', 'ver', 'video', 'vurdum', 'yap', 'yardim', 'yarin', 'yemek', 'yok', 'yoruldum', 'youtube']);
+export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'al', 'anne', 'ara', 'araba', 'arkadas', 'ates', 'ayak', 'az', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'bekle', 'ben', 'bilgisayar', 'bilmiyorum', 'bitti', 'bogaz', 'bozuk', 'bugun', 'buyuk', 'calismiyor', 'cay', 'cizgi-film', 'cok', 'daha', 'dis', 'disari', 'dizi', 'doktor', 'dun', 'dur', 'dustu', 'ekmek', 'ekran', 'el', 'elazig', 'eve', 'evet', 'film', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'gonder', 'goz', 'guzel', 'haberler', 'hasta', 'hastalandi', 'hastane', 'hayir', 'ic', 'ilac', 'internet', 'istemiyorum', 'istiyorum', 'iyi', 'izle', 'kalk', 'kan', 'kapat', 'karin', 'kasiniyor', 'kayboldu', 'kim', 'kirildi', 'kisiler', 'kizardi', 'kizgin', 'kol', 'korktum', 'koy', 'kucuk', 'kulak', 'kulaklik', 'kumanda', 'lego', 'market', 'minecraft', 'mutlu', 'muzik', 'ne', 'nerede', 'netflix', 'oksuruk', 'oldu', 'otur', 'oyna', 'oyun', 'oyun-kolu', 'ozledim', 'para', 'park', 'saril', 'sarj-bitti', 'sarj-kablosu', 'seviyorum', 'sicak', 'sikildim', 'simdi', 'sirt', 'soguk', 'sonra', 'su', 'susadim', 'tablet', 'tamam', 'telefon', 'televizyon', 'tuvalet', 'usudum', 'uyku', 'uyu', 'uzgun', 'var', 'ver', 'video', 'vurdum', 'yap', 'yardim', 'yarin', 'ye', 'yemek', 'yok', 'yoruldum', 'youtube']);
 
 function pictoSrc(file: string): string {
   const stem = file.replace(/\.(png|svg)$/, '');
@@ -226,6 +226,19 @@ export const LIBRARY: LibraryItem[] = (
     ['Park', 'yerler', 'park'],
     ['Market', 'yerler', 'market'],
     ['Dışarı', 'yerler', 'disari'],
+    // Everyday words (2026-11-22)
+    ['İç', 'eylem', 'ic'],
+    ['Ye', 'eylem', 'ye'],
+    ['Otur', 'eylem', 'otur'],
+    ['Kalk', 'eylem', 'kalk'],
+    ['Dur', 'eylem', 'dur'],
+    ['Uyu', 'eylem', 'uyu'],
+    ['Sarıl', 'eylem', 'saril'],
+    ['Büyük', 'temel', 'buyuk'],
+    ['Küçük', 'temel', 'kucuk'],
+    ['Çok', 'temel', 'cok'],
+    ['Az', 'temel', 'az'],
+    ['Soğuk', 'gunluk', 'soguk'],
   ] as [string, CategoryId, string][]
 )
   .filter(([, , stem]) => V2_PICTOS.has(stem))
