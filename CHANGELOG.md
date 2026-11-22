@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-22 (Kişiler)
+- **Kişiler: Barış, Güler Teyze and Dayı are on the board.** Güler Teyze takes the place of the hidden "Teyze" card, Dayı is shown again, and Barış goes in the next free place. Nothing else moves. Each has forms when held (Barış'a, Güler Teyze'ye, dayıma…). Barış and Güler Teyze use a placeholder picture for now: Ayarlar → the word → Fotoğraf to give them a real photo.
+- One-time board changes like this one now run only once, so a word hidden again later stays hidden.
+
 ## 2026-11-22 (morning)
 - **12 new everyday words** in the ready-made pictures, each with a new picture: **İç, Ye, Otur, Kalk, Dur, Uyu, Sarıl, Büyük, Küçük, Çok, Az, Soğuk.** Type them in Kelime ekle, or pick them from the row.
 - **The ready-made pictures follow the chosen category:** choose Eylem and Eylem's pictures come first.

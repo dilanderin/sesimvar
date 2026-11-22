@@ -26,10 +26,11 @@ const FORMS: Record<string, string[]> = {
   'kisiler-baba': ['babam', 'babama', 'babamı', 'babamla'],
   'kisiler-amca': ['amcam', 'amcama', 'amcamı', 'amcamla'],
   'kisiler-hala': ['halam', 'halama', 'halamı', 'halamla'],
-  'kisiler-teyze': ['teyzem', 'teyzeme', 'teyzemi', 'teyzemle'],
+  'kisiler-guler-teyze': ["Güler Teyze'ye", "Güler Teyze'yi", "Güler Teyze'yle", "Güler Teyze'nin"],
   'kisiler-dayi': ['dayım', 'dayıma', 'dayımı', 'dayımla'],
   'kisiler-doktor': ['doktora', 'doktoru', 'doktorda', 'doktordan'],
   'kisiler-dilan': ["Dilan'a", "Dilan'ı", "Dilan'la", "Dilan'ın"],
+  'kisiler-baris': ["Barış'a", "Barış'ı", "Barış'la", "Barış'ın"],
   // Eylem (and the same verbs on Ekran)
   'eylem-gel': ['geliyorum', 'geldim', 'gelsin', 'gelme'],
   'eylem-git': ['gidiyorum', 'gittim', 'gitsin', 'gitme'],
@@ -69,8 +70,12 @@ const FORMS: Record<string, string[]> = {
   'yerler-elazig': ["Elazığ'a", "Elazığ'da", "Elazığ'dan"],
 };
 
-export function wordForms(word: Pick<Word, 'id'>): string[] {
-  return FORMS[word.id] ?? [];
+/** Boards saved before 2026-11-22 keep Güler Teyze under the old "Teyze" id. */
+const SAME_AS: Record<string, string> = { 'kisiler-teyze': 'kisiler-guler-teyze' };
+
+export function wordForms(word: Pick<Word, 'id'> & { label?: string }): string[] {
+  if (word.id === 'kisiler-teyze' && word.label !== 'Güler Teyze') return [];
+  return FORMS[SAME_AS[word.id] ?? word.id] ?? [];
 }
 
 export const FORM_WORD_IDS = Object.keys(FORMS);

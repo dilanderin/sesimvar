@@ -84,9 +84,10 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
     ['Amca', 'amca.svg', { keepCase: true }],
     ['Hala', 'hala.svg', { keepCase: true }],
     ['Dilan', 'dilan.svg', { keepCase: true }],
-    ['Teyze', 'teyze.svg', { keepCase: true, hidden: true }],
-    ['Dayı', 'dayi.svg', { keepCase: true, hidden: true }],
+    ['Güler Teyze', 'teyze.svg', { keepCase: true }],
+    ['Dayı', 'dayi.svg', { keepCase: true }],
     ['Doktor', 'doktor.png', { keepCase: true, hidden: true }],
+    ['Barış', 'baris.svg', { keepCase: true }],
   ],
   eylem: [
     ['Gel', 'gel.svg'],

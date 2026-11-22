@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { del, get, set } from 'idb-keyval';
-import { seedWords, type Word } from './data';
+import { freeSlot, seedWords, type Word } from './data';
 
 export type CardSize = 'small' | 'medium' | 'large';
 export type ThemeChoice = 'auto' | 'day' | 'night';
@@ -37,6 +37,8 @@ export interface AppState {
   /** Recently read or sent sentences (word ids), newest first. */
   history: string[][];
   settings: Settings;
+  /** One-time changes already applied to this board (see MIGRATIONS). */
+  migrations?: string[];
 }
 
 const STORAGE_KEY = 'sesimvar:v1';
@@ -64,6 +66,7 @@ export function initialState(): AppState {
       sendTo: { name: '', address: '' },
       wordForms: false,
     },
+    migrations: MIGRATIONS.map((m) => m.id),
   };
 }
 
@@ -95,14 +98,67 @@ export function addMissingSeeds(words: Word[]): Word[] {
   return added.length ? [...words, ...added] : words;
 }
 
+/** One-time changes the family asked for, applied once to boards saved
+ *  earlier. Each one only adds or shows words; nothing moves or disappears.
+ *  A board remembers which ran, so a word hidden again later stays hidden. */
+export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[] }[] = [
+  {
+    // "Add Kişiler: Barış, Güler Teyze, Dayı" (2026-11-22).
+    id: 'kisiler-baris-guler-dayi',
+    run: (words) => {
+      const seeds = seedWords();
+      let next = [...words];
+      const show = (label: string): boolean => {
+        const i = next.findIndex((w) => w.category === 'kisiler' && w.label === label);
+        if (i < 0) return false;
+        if (next[i].hidden) next[i] = { ...next[i], hidden: false };
+        return true;
+      };
+      const add = (id: string) => {
+        const seed = seeds.find((w) => w.id === id)!;
+        const taken = next.some((w) => w.category === 'kisiler' && w.slot === seed.slot);
+        const slot = taken ? freeSlot(next, 'kisiler') : seed.slot;
+        if (slot >= 0) next = [...next, { ...seed, slot }];
+      };
+      if (!show('Dayı')) add('kisiler-dayi');
+      if (!show('Barış')) add('kisiler-baris');
+      if (!show('Güler Teyze')) {
+        // The hidden, never-used built-in "Teyze" becomes Güler Teyze in its own place.
+        const i = next.findIndex(
+          (w) => w.id === 'kisiler-teyze' && w.hidden && w.label === 'Teyze' && !w.recording && w.picture.kind === 'builtin',
+        );
+        if (i >= 0) next[i] = { ...next[i], label: 'Güler Teyze', say: 'Güler Teyze', hidden: false };
+        else add('kisiler-guler-teyze');
+      }
+      return next;
+    },
+  },
+];
+
+/** Bring a saved or restored board up to date with this version of the app. */
+export function upgradeState(saved: AppState): AppState {
+  const fresh = initialState();
+  const done = new Set(saved.migrations ?? []);
+  let words = refreshSeedPictures(saved.words);
+  for (const m of MIGRATIONS) if (!done.has(m.id)) words = m.run(words);
+  words = addMissingSeeds(words);
+  return {
+    ...fresh,
+    ...saved,
+    version: 1,
+    words,
+    settings: { ...fresh.settings, ...saved.settings },
+    migrations: MIGRATIONS.map((m) => m.id),
+  };
+}
+
 function load(): AppState {
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     if (raw) {
       const parsed = JSON.parse(raw) as AppState;
       if (parsed.version === 1 && Array.isArray(parsed.words)) {
-        const fresh = initialState();
-        const loaded: AppState = { ...fresh, ...parsed, words: addMissingSeeds(refreshSeedPictures(parsed.words)), settings: { ...fresh.settings, ...parsed.settings } };
+        const loaded = upgradeState(parsed);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
         return loaded;
       }
