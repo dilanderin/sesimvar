@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-22
+- **Every picture is now in the new outlined style:** Eşyalar, Duygu, Ekran, Yerler and all the category icons, 121 pictures in total.
+- **More words on the board.** Ekran: Oyun, YouTube, Netflix, Film, Dizi, Çizgi film, Haberler. Yerler: Köy, Elazığ. If the app is already installed, these appear by themselves wherever their place is free. Nothing that was there moves.
+- **32 more ready-made pictures in Kelime ekle:** Göz, Kulak, El, Boğaz, Sırt, Ayak, Kan, Vurdum, Öksürük, Ateş, Hastalandı, İyi, Üzgün, Sıkıldım, Seviyorum, Özledim, Güzel, Korktum, Kızgın, İnternet, Müzik, Video, Araba, Para, Hastane, Park, Market, Dışarı, Kayboldu, and more.
+- Every word from the first version is now in the app, either on the board or in the ready-made pictures.
+- Word forms for the new words too: YouTube'da, filmi, köye, Elazığ'a…
+
 ## 2026-11-21 (late night)
 - **Kelime çekimleri** (Ayarlar → Görünüm, off by default): hold a card to choose a form of the word. Examples: **kolum, kollarım, koluma** (so "Kolum acıyor" works), **suyu, suya, suda**, **annem, anneme, annemle**, and for actions **geliyorum, geldim, gelsin, gelme**. All 45 built-in words that have forms were written by hand, so irregular ones are right (karın → karnım, su → suyu). A single tap works exactly as before. The chosen form is spoken, sent in Messages and kept in Son cümleler.
 - **Hazır resimler** in Kelime ekle: the ready-made pictures can be browsed without typing; tap one to fill in the word.

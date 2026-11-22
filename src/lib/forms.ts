@@ -56,8 +56,17 @@ const FORMS: Record<string, string[]> = {
   'esyalar-bilgisayar': ['bilgisayarı', 'bilgisayara', 'bilgisayarda', 'bilgisayarım'],
   'esyalar-kulaklik': ['kulaklığı', 'kulaklığa', 'kulaklıkta', 'kulaklığım'],
   'esyalar-kumanda': ['kumandayı', 'kumandaya', 'kumandada', 'kumandam'],
+  'ekran-youtube': ["YouTube'u", "YouTube'da", "YouTube'dan"],
+  'ekran-netflix': ["Netflix'i", "Netflix'te", "Netflix'ten"],
+  'ekran-film': ['filmi', 'filme', 'filmde', 'filmler'],
+  'ekran-dizi': ['diziyi', 'diziye', 'dizide', 'diziler'],
+  'ekran-cizgi-film': ['çizgi filmi', 'çizgi filmler'],
+  'ekran-haberler': ['haberleri', 'haberlerde'],
+  'ekran-oyun': ['oyunu', 'oyuna', 'oyunda', 'oyunlar'],
   // Yerler: the card says "Eve" (to home)
   'yerler-eve': ['ev', 'evde', 'evden', 'evim'],
+  'yerler-koy': ['köye', 'köyde', 'köyden', 'köyüm'],
+  'yerler-elazig': ["Elazığ'a", "Elazığ'da", "Elazığ'dan"],
 };
 
 export function wordForms(word: Pick<Word, 'id'>): string[] {

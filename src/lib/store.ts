@@ -79,6 +79,22 @@ export function refreshSeedPictures(words: Word[]): Word[] {
   });
 }
 
+/** Built-in words added in a later version appear on saved boards too, but
+ *  only in a place that is still free: nothing the family arranged moves. */
+export function addMissingSeeds(words: Word[]): Word[] {
+  const ids = new Set(words.map((w) => w.id));
+  const taken = new Set(words.map((w) => `${w.category}:${w.slot}`));
+  const added: Word[] = [];
+  for (const seed of seedWords()) {
+    if (ids.has(seed.id) || seed.category === 'core') continue;
+    const key = `${seed.category}:${seed.slot}`;
+    if (taken.has(key)) continue;
+    taken.add(key);
+    added.push(seed);
+  }
+  return added.length ? [...words, ...added] : words;
+}
+
 function load(): AppState {
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
@@ -86,7 +102,7 @@ function load(): AppState {
       const parsed = JSON.parse(raw) as AppState;
       if (parsed.version === 1 && Array.isArray(parsed.words)) {
         const fresh = initialState();
-        const loaded: AppState = { ...fresh, ...parsed, words: refreshSeedPictures(parsed.words), settings: { ...fresh.settings, ...parsed.settings } };
+        const loaded: AppState = { ...fresh, ...parsed, words: addMissingSeeds(refreshSeedPictures(parsed.words)), settings: { ...fresh.settings, ...parsed.settings } };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(loaded));
         return loaded;
       }

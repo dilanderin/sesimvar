@@ -16,10 +16,10 @@ export const CATEGORIES: Category[] = [
   { id: 'eylem', name: 'Eylem', color: '#A9713F', icon: 'pictos/v2/gel.png' },
   { id: 'gunluk', name: 'Günlük', color: '#00B4C4', icon: 'pictos/v2/yemek.png' },
   { id: 'vucut', name: 'Vücut', color: '#FF4B6E', icon: 'pictos/v2/kol.png' },
-  { id: 'duygu', name: 'Duygu', color: '#F2B100', icon: 'pictos/duygu.png' },
-  { id: 'ekran', name: 'Ekran', color: '#1C9BF6', icon: 'pictos/ekran.png' },
-  { id: 'esyalar', name: 'Eşyalar', color: '#2BC866', icon: 'pictos/tablet.png' },
-  { id: 'yerler', name: 'Yerler', color: '#C05BF0', icon: 'pictos/ev.png' },
+  { id: 'duygu', name: 'Duygu', color: '#F2B100', icon: 'pictos/v2/mutlu.png' },
+  { id: 'ekran', name: 'Ekran', color: '#1C9BF6', icon: 'pictos/v2/ekran.png' },
+  { id: 'esyalar', name: 'Eşyalar', color: '#2BC866', icon: 'pictos/v2/tablet.png' },
+  { id: 'yerler', name: 'Yerler', color: '#C05BF0', icon: 'pictos/v2/eve.png' },
 ];
 
 export const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c])) as Record<CategoryId, Category>;
@@ -132,11 +132,19 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
   ],
   // The design shows no words for Duygu yet: the board starts small and the
   // family adds words from Ayarlar.
-  duygu: [['Mutlu', 'duygu.png']],
+  duygu: [['Mutlu', 'mutlu.png']],
   ekran: [
     ['Minecraft', 'minecraft.svg', { keepCase: true }],
     ['İzle', 'izle.svg'],
     ['Oyna', 'oyna.svg'],
+    // From the first version's Ekran board.
+    ['Oyun', 'oyun.png'],
+    ['YouTube', 'youtube.png', { keepCase: true }],
+    ['Netflix', 'netflix.png', { keepCase: true }],
+    ['Film', 'film.png'],
+    ['Dizi', 'dizi.png'],
+    ['Çizgi film', 'cizgi-film.png'],
+    ['Haberler', 'haberler.png'],
   ],
   esyalar: [
     ['Tablet', 'tablet.png'],
@@ -152,12 +160,16 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
     ['Kumanda', 'kumanda.png'],
     ['Şarj bitti', 'sarj-bitti.png'],
   ],
-  yerler: [['Eve', 'ev.png']],
+  yerler: [
+    ['Eve', 'ev.png'],
+    ['Köy', 'koy.png'],
+    ['Elazığ', 'elazig.png', { keepCase: true }],
+  ],
 };
 
 /** Pictograms redrawn for Sesim Var (outlined style), by file stem. Seed
  *  words use one of these when it exists, otherwise their original picture. */
-export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'al', 'anne', 'ara', 'arkadas', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'bekle', 'ben', 'bilmiyorum', 'bitti', 'bugun', 'cay', 'daha', 'dis', 'doktor', 'dun', 'dustu', 'ekmek', 'evet', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'gonder', 'hasta', 'hayir', 'ilac', 'istemiyorum', 'istiyorum', 'izle', 'kapat', 'karin', 'kasiniyor', 'kim', 'kirildi', 'kisiler', 'kizardi', 'kol', 'ne', 'nerede', 'oldu', 'oyna', 'sicak', 'simdi', 'sonra', 'su', 'susadim', 'tamam', 'tuvalet', 'usudum', 'uyku', 'var', 'ver', 'yap', 'yardim', 'yarin', 'yemek', 'yok', 'yoruldum']);
+export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'al', 'anne', 'ara', 'araba', 'arkadas', 'ates', 'ayak', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'bekle', 'ben', 'bilgisayar', 'bilmiyorum', 'bitti', 'bogaz', 'bozuk', 'bugun', 'calismiyor', 'cay', 'cizgi-film', 'daha', 'dis', 'disari', 'dizi', 'doktor', 'dun', 'dustu', 'ekmek', 'ekran', 'el', 'elazig', 'eve', 'evet', 'film', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'gonder', 'goz', 'guzel', 'haberler', 'hasta', 'hastalandi', 'hastane', 'hayir', 'ilac', 'internet', 'istemiyorum', 'istiyorum', 'iyi', 'izle', 'kan', 'kapat', 'karin', 'kasiniyor', 'kayboldu', 'kim', 'kirildi', 'kisiler', 'kizardi', 'kizgin', 'kol', 'korktum', 'koy', 'kulak', 'kulaklik', 'kumanda', 'lego', 'market', 'minecraft', 'mutlu', 'muzik', 'ne', 'nerede', 'netflix', 'oksuruk', 'oldu', 'oyna', 'oyun', 'oyun-kolu', 'ozledim', 'para', 'park', 'sarj-bitti', 'sarj-kablosu', 'seviyorum', 'sicak', 'sikildim', 'simdi', 'sirt', 'sonra', 'su', 'susadim', 'tablet', 'tamam', 'telefon', 'televizyon', 'tuvalet', 'usudum', 'uyku', 'uzgun', 'var', 'ver', 'video', 'vurdum', 'yap', 'yardim', 'yarin', 'yemek', 'yok', 'yoruldum', 'youtube']);
 
 function pictoSrc(file: string): string {
   const stem = file.replace(/\.(png|svg)$/, '');
@@ -185,6 +197,35 @@ export const LIBRARY: LibraryItem[] = (
     ['Gitti', 'eylem', 'gitti'],
     ['Aç', 'eylem', 'ac'],
     ['Kapat', 'eylem', 'kapat'],
+    ['Kayboldu', 'temel', 'kayboldu'],
+    ['Hastalandı', 'vucut', 'hastalandi'],
+    ['Göz', 'vucut', 'goz'],
+    ['Kulak', 'vucut', 'kulak'],
+    ['El', 'vucut', 'el'],
+    ['Boğaz', 'vucut', 'bogaz'],
+    ['Sırt', 'vucut', 'sirt'],
+    ['Ayak', 'vucut', 'ayak'],
+    ['Kan', 'vucut', 'kan'],
+    ['Vurdum', 'vucut', 'vurdum'],
+    ['Öksürük', 'vucut', 'oksuruk'],
+    ['Ateş', 'vucut', 'ates'],
+    ['İyi', 'vucut', 'iyi'],
+    ['Üzgün', 'duygu', 'uzgun'],
+    ['Sıkıldım', 'duygu', 'sikildim'],
+    ['Seviyorum', 'duygu', 'seviyorum'],
+    ['Özledim', 'duygu', 'ozledim'],
+    ['Güzel', 'duygu', 'guzel'],
+    ['Korktum', 'duygu', 'korktum'],
+    ['Kızgın', 'duygu', 'kizgin'],
+    ['İnternet', 'ekran', 'internet'],
+    ['Müzik', 'ekran', 'muzik'],
+    ['Video', 'ekran', 'video'],
+    ['Araba', 'esyalar', 'araba'],
+    ['Para', 'esyalar', 'para'],
+    ['Hastane', 'yerler', 'hastane'],
+    ['Park', 'yerler', 'park'],
+    ['Market', 'yerler', 'market'],
+    ['Dışarı', 'yerler', 'disari'],
   ] as [string, CategoryId, string][]
 )
   .filter(([, , stem]) => V2_PICTOS.has(stem))

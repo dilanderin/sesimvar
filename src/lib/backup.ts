@@ -1,5 +1,5 @@
 import type { Word } from './data';
-import { getBlob, getState, initialState, refreshSeedPictures, replaceState, saveBlob, type AppState } from './store';
+import { addMissingSeeds, getBlob, getState, initialState, refreshSeedPictures, replaceState, saveBlob, type AppState } from './store';
 
 /** A backup is one JSON file: the board and settings, plus every recording,
  *  photo and downloaded pictogram as base64. */
@@ -100,5 +100,5 @@ export async function restoreBackup(b: BackupFile) {
     await saveBlob(key, base64ToBlob(data, type));
   }
   const fresh = initialState();
-  replaceState({ ...fresh, ...b.state, words: refreshSeedPictures(b.state.words), version: 1, settings: { ...fresh.settings, ...b.state.settings } });
+  replaceState({ ...fresh, ...b.state, words: addMissingSeeds(refreshSeedPictures(b.state.words)), version: 1, settings: { ...fresh.settings, ...b.state.settings } });
 }

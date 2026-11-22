@@ -20,7 +20,7 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 
 ## Backlog (pick from the top, refine as you learn)
 
-- [ ] Finish the remaining pictograms (see `docs/pictograms.md`).
+- [x] Finish the remaining pictograms (see `docs/pictograms.md`).
 - [x] **Son cümleler** (recent sentences): a small list in the balloon area or in Ayarlar to say a recent sentence again with one tap.
 - [x] **Accidental-tap protection** (repeat-tap guard done; "hold to select" still to do) in Ayarlar: ignore repeat taps within N ms, and optionally "hold to select" for unsteady hands.
 - [x] **Speech speed** (pitch still to do) in Ses ve papağan.
