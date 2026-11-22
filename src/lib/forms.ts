@@ -1,10 +1,11 @@
 import type { Word } from './data';
+import { lowerTr } from './turkish';
 
 /** Hand-written Turkish forms for the built-in words, shown when a card is held
  *  (if "Kelime çekimleri" is on in Ayarlar). Written out rather than generated,
  *  so irregular words are right: su → suyu, karın → karnım, ilaç → ilacı.
  *  Nouns: my/to/at/from…; body parts: kolum (so "kolum acıyor" works);
- *  people: annem, anneme…; verbs: -iyorum, -dim, -sin, -me (don't). */
+ *  people: annem, anneme…; verbs: -iyorum, -dim, -di (geldi, yaptı), -sin, -me (don't). */
 const FORMS: Record<string, string[]> = {
   // Günlük
   'gunluk-su': ['suyu', 'suya', 'suda', 'sudan'],
@@ -32,20 +33,20 @@ const FORMS: Record<string, string[]> = {
   'kisiler-dilan': ["Dilan'a", "Dilan'ı", "Dilan'la", "Dilan'ın"],
   'kisiler-baris': ["Barış'a", "Barış'ı", "Barış'la", "Barış'ın"],
   // Eylem (and the same verbs on Ekran)
-  'eylem-gel': ['geliyorum', 'geldim', 'gelsin', 'gelme'],
-  'eylem-git': ['gidiyorum', 'gittim', 'gitsin', 'gitme'],
-  'eylem-al': ['alıyorum', 'aldım', 'alsın', 'alma'],
-  'eylem-ver': ['veriyorum', 'verdim', 'versin', 'verme'],
-  'eylem-getir': ['getiriyorum', 'getirdim', 'getirsin', 'getirme'],
-  'eylem-bak': ['bakıyorum', 'baktım', 'baksın', 'bakma'],
-  'eylem-oyna': ['oynuyorum', 'oynadım', 'oynasın', 'oynama'],
-  'eylem-izle': ['izliyorum', 'izledim', 'izlesin', 'izleme'],
-  'eylem-ara': ['arıyorum', 'aradım', 'arasın', 'arama'],
-  'eylem-bekle': ['bekliyorum', 'bekledim', 'beklesin', 'bekleme'],
-  'eylem-yap': ['yapıyorum', 'yaptım', 'yapsın', 'yapma'],
-  'eylem-gonder': ['gönderiyorum', 'gönderdim', 'göndersin', 'gönderme'],
-  'ekran-izle': ['izliyorum', 'izledim', 'izlesin', 'izleme'],
-  'ekran-oyna': ['oynuyorum', 'oynadım', 'oynasın', 'oynama'],
+  'eylem-gel': ['geliyorum', 'geldim', 'geldi', 'gelsin', 'gelme'],
+  'eylem-git': ['gidiyorum', 'gittim', 'gitti', 'gitsin', 'gitme'],
+  'eylem-al': ['alıyorum', 'aldım', 'aldı', 'alsın', 'alma'],
+  'eylem-ver': ['veriyorum', 'verdim', 'verdi', 'versin', 'verme'],
+  'eylem-getir': ['getiriyorum', 'getirdim', 'getirdi', 'getirsin', 'getirme'],
+  'eylem-bak': ['bakıyorum', 'baktım', 'baktı', 'baksın', 'bakma'],
+  'eylem-oyna': ['oynuyorum', 'oynadım', 'oynadı', 'oynasın', 'oynama'],
+  'eylem-izle': ['izliyorum', 'izledim', 'izledi', 'izlesin', 'izleme'],
+  'eylem-ara': ['arıyorum', 'aradım', 'aradı', 'arasın', 'arama'],
+  'eylem-bekle': ['bekliyorum', 'bekledim', 'bekledi', 'beklesin', 'bekleme'],
+  'eylem-yap': ['yapıyorum', 'yaptım', 'yaptı', 'yapsın', 'yapma'],
+  'eylem-gonder': ['gönderiyorum', 'gönderdim', 'gönderdi', 'göndersin', 'gönderme'],
+  'ekran-izle': ['izliyorum', 'izledim', 'izledi', 'izlesin', 'izleme'],
+  'ekran-oyna': ['oynuyorum', 'oynadım', 'oynadı', 'oynasın', 'oynama'],
   'ekran-minecraft': ["Minecraft'ı", "Minecraft'a", "Minecraft'ta"],
   // Eşyalar
   'esyalar-tablet': ['tableti', 'tablete', 'tablette', 'tabletim'],
@@ -70,12 +71,30 @@ const FORMS: Record<string, string[]> = {
   'yerler-elazig': ["Elazığ'a", "Elazığ'da", "Elazığ'dan"],
 };
 
+/** Forms for action words the family adds from Hazır resimler (they get a new
+ *  id when added, so these are found by the spoken word instead). */
+const SAY_FORMS: Record<string, string[]> = {
+  iç: ['içiyorum', 'içtim', 'içti', 'içsin', 'içme'],
+  ye: ['yiyorum', 'yedim', 'yedi', 'yesin', 'yeme'],
+  otur: ['oturuyorum', 'oturdum', 'oturdu', 'otursun', 'oturma'],
+  kalk: ['kalkıyorum', 'kalktım', 'kalktı', 'kalksın', 'kalkma'],
+  dur: ['duruyorum', 'durdum', 'durdu', 'dursun', 'durma'],
+  uyu: ['uyuyorum', 'uyudum', 'uyudu', 'uyusun', 'uyuma'],
+  sarıl: ['sarılıyorum', 'sarıldım', 'sarıldı', 'sarılsın', 'sarılma'],
+  aç: ['açıyorum', 'açtım', 'açtı', 'açsın', 'açma'],
+  kapat: ['kapatıyorum', 'kapattım', 'kapattı', 'kapatsın', 'kapatma'],
+};
+
 /** Boards saved before 2026-11-22 keep Güler Teyze under the old "Teyze" id. */
 const SAME_AS: Record<string, string> = { 'kisiler-teyze': 'kisiler-guler-teyze' };
 
-export function wordForms(word: Pick<Word, 'id'> & { label?: string }): string[] {
+export function wordForms(word: Pick<Word, 'id'> & { label?: string; say?: string }): string[] {
   if (word.id === 'kisiler-teyze' && word.label !== 'Güler Teyze') return [];
-  return FORMS[SAME_AS[word.id] ?? word.id] ?? [];
+  const byId = FORMS[SAME_AS[word.id] ?? word.id];
+  if (byId) return byId;
+  return word.say ? (SAY_FORMS[lowerTr(word.say.trim())] ?? []) : [];
 }
 
 export const FORM_WORD_IDS = Object.keys(FORMS);
+/** Every form of the library action words (for recording the voice). */
+export const SAY_FORM_TEXTS = Object.values(SAY_FORMS).flat();

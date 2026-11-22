@@ -26,4 +26,17 @@ describe('word forms', () => {
     expect(byId('eylem-gel')).toContain('gelme');
     expect(byId('gunluk-acıktım')).toEqual([]); // words without forms: hold does nothing
   });
+
+  it('has "o yaptı" (third person past) for every action', () => {
+    expect(wordForms({ id: 'eylem-gel' })).toContain('geldi');
+    expect(wordForms({ id: 'eylem-yap' })).toContain('yaptı');
+    expect(wordForms({ id: 'eylem-git' })).toContain('gitti');
+    expect(wordForms({ id: 'ekran-izle' })).toContain('izledi');
+  });
+
+  it('gives forms to action words added from Hazır resimler, found by the word', () => {
+    expect(wordForms({ id: 'w-ic-abc123', say: 'iç' })).toContain('içti');
+    expect(wordForms({ id: 'w-ye-abc123', say: 'Ye' })).toContain('yedi');
+    expect(wordForms({ id: 'w-zurafa-1', say: 'zürafa' })).toEqual([]);
+  });
 });

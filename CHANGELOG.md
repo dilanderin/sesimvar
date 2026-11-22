@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-22 (more word forms)
+- **Kelime çekimleri: "o yaptı" too.** Every action now also has the third-person past: **geldi, gitti, aldı, verdi, getirdi, baktı, oynadı, izledi, aradı, bekledi, yaptı, gönderdi.**
+- **Action words added from Hazır resimler have forms too:** İç (içiyorum, içtim, içti, içsin, içme), Ye, Otur, Kalk, Dur, Uyu, Sarıl, Aç, Kapat.
+- All new forms are recorded in Ahmet's voice.
+
 ## 2026-11-22 (faster speech)
 - **A tapped word is spoken at once.** It used to wait until the picture had flown into the balloon (about 0.6 s), and the voice clip was loaded at that moment. Now the word is said the moment it is tapped, while the picture flies, and the clips of every word on screen are kept ready in memory.
 

@@ -1,13 +1,14 @@
 // Lists every text the prerecorded voice needs, as JSON [{key, text, file}].
 // Run: npx tsx scripts/voice-texts.ts > /tmp/texts.json
 import { LIBRARY, defaultSay, seedWords } from '../src/lib/data';
-import { FORM_WORD_IDS, wordForms } from '../src/lib/forms';
+import { FORM_WORD_IDS, SAY_FORM_TEXTS, wordForms } from '../src/lib/forms';
 import { clipFile, clipKey } from '../src/lib/voice';
 
 const texts = new Set<string>();
 for (const w of seedWords()) texts.add(w.say);
 for (const i of LIBRARY) texts.add(defaultSay(i.label, i.category));
 for (const id of FORM_WORD_IDS) for (const f of wordForms({ id })) texts.add(f);
+for (const f of SAY_FORM_TEXTS) texts.add(f);
 // Ayarlar voice preview
 texts.add('Merhaba. Birlikte konuşalım.');
 

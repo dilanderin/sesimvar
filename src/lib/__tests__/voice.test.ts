@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { LIBRARY, defaultSay, seedWords } from '../data';
-import { FORM_WORD_IDS, wordForms } from '../forms';
+import { FORM_WORD_IDS, SAY_FORM_TEXTS, wordForms } from '../forms';
 import { DEFAULT_VOICE_PACK, clipFile, clipKey, clipUrl } from '../voice';
 
 describe('prerecorded voice', () => {
@@ -9,6 +9,7 @@ describe('prerecorded voice', () => {
     ...seedWords().map((w) => w.say),
     ...LIBRARY.map((i) => defaultSay(i.label, i.category)),
     ...FORM_WORD_IDS.flatMap((id) => wordForms({ id })),
+    ...SAY_FORM_TEXTS,
   ];
 
   it('has a clip for every built-in word, ready-made picture and form', () => {
