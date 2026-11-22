@@ -15,8 +15,9 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 4. **Keep the design language.** Use the design canvas measurements, the Fredoka font, the category colours, day and night themes, calm mode (motion off), and real buttons that are 44px or larger with Turkish labels. All UI copy is Turkish. The tone is warm and simple.
 5. **Make small, verified steps.** Do one to three focused improvements per run. `npm test` and `npm run build` must pass. Check the main board (landscape and portrait, day and night) and any screen you touched in Playwright, with no page errors, before pushing to `main`. Cloudflare Pages deploys `main` to https://sesimvar.d3asoft.com. The owner wants changes pushed **directly to `main`, no pull requests** (confirmed 2026-11-21), so the checks above are the only gate.
 6. **Keep pictograms consistent.** New pictures use the outlined style in `docs/pictograms.md`, via Figma (file `SENncnywORYR4pXEtqvicf`) and `scripts/add-pictos.py`. Figma AI credits are limited: at most about 12 new images per run, and leave credits for the pictogram backlog first.
-7. **Record what you did.** Add an entry to `CHANGELOG.md` and update the backlog below by ticking items off and adding new ideas.
-8. **Stop rather than guess** when a change would affect how the person communicates in a way the family should decide, such as the core row, removing a feature, or changing what Gönder does. Leave it in the backlog under "Ask the family", and mention it in the run's report.
+7. **Every built-in word has a voice clip.** After adding built-in words, library words or forms, run `npx tsx scripts/voice-texts.ts > /tmp/texts.json && python3 scripts/make-voice.py /tmp/texts.json` (needs `pip install edge-tts`, ffmpeg, and network access to speech.platform.bing.com: the "sesimvar" cloud environment allows it). `src/lib/__tests__/voice.test.ts` fails until the clips exist.
+8. **Record what you did.** Add an entry to `CHANGELOG.md` and update the backlog below by ticking items off and adding new ideas.
+9. **Stop rather than guess** when a change would affect how the person communicates in a way the family should decide, such as the core row, removing a feature, or changing what Gönder does. Leave it in the backlog under "Ask the family", and mention it in the run's report.
 
 ## Backlog (pick from the top, refine as you learn)
 
@@ -28,6 +29,7 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 - [x] **Library browser** in Kelime ekle: show the ready-made pictures by category, not only by typing.
 - [ ] **Larger boards option (next, most needed)**: a second page per category, off by default. It must not change the first page. Temel, Eylem, Günlük, Vücut and Eşyalar are full (12/12), so most library words can't be added to their own category yet.
 - [x] **More vocabulary in the library**: İç, Ye, Otur, Kalk, Dur, Uyu, Sarıl, Büyük, Küçük, Çok, Az, Soğuk (2026-11-22). More could follow: needs (yıka, giy, aç/kapat ışık), feelings.
+- [ ] **The same young male voice for words the family types**: today they fall back to the device voice (female Yelda on iPad). Options: run Piper (open-source, `tr_TR-dfki-medium`, male) in the browser via onnxruntime-web, downloaded once and cached; or record those words here on request and ship them.
 - [ ] **Usage-aware suggestions** (local only): in Ayarlar, show words the family often types but that are not on the board yet.
 - [ ] **Accessibility**: VoiceOver labels audit, switch/keyboard scanning, high-contrast option.
 - [ ] **Performance**: lighter first load, image lazy-loading in Ayarlar.
@@ -36,6 +38,7 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 
 - **Gönder** sends the sentence to the owner in the Messages app (2026-11-21). It opens Messages with the text filled in; iOS requires one tap on send. Without an address it only speaks.
 - Changes are pushed directly to `main`, without pull requests.
+- **Voice** (2026-11-22): the person who uses the board wants a young (about 20) male voice, not a family member's. The prerecorded "Ahmet" voice (Microsoft tr-TR-AhmetNeural, pitch +8 Hz, rate +4%) is the default. Family recordings still play first when a word has one.
 
 ## Ask the family (don't do without the owner)
 

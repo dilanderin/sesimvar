@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { del, get, set } from 'idb-keyval';
 import { freeSlot, seedWords, type Word } from './data';
+import { DEFAULT_VOICE_PACK } from './voice';
 
 export type CardSize = 'small' | 'medium' | 'large';
 export type ThemeChoice = 'auto' | 'day' | 'night';
@@ -10,6 +11,8 @@ export interface Settings {
   theme: ThemeChoice;
   motion: boolean;
   voiceURI: string | null;
+  /** Prerecorded voice used for words that have a clip (null: device voice only). */
+  voicePack: string | null;
   parrotName: string;
   /** Locked: settings open only with a 2-second press on the gear. */
   locked: boolean;
@@ -58,6 +61,7 @@ export function initialState(): AppState {
       theme: 'auto',
       motion: !prefersReducedMotion(),
       voiceURI: null,
+      voicePack: DEFAULT_VOICE_PACK,
       parrotName: 'Pırpır',
       locked: true,
       core: words.filter((w) => w.category === 'core').map((w) => w.id),

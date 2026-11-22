@@ -23,7 +23,8 @@ import { mix } from '../lib/color';
 import { isValidAddress, openMessages, smsUrl } from '../lib/messages';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
 import { useRecorder, type Take } from '../lib/recorder';
-import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, turkishVoices } from '../lib/speech';
+import { hasClip, onVoicesChanged, pickVoice, previewVoice, setSpeechRate, setVoicePack, turkishVoices } from '../lib/speech';
+import { VOICE_PACKS } from '../lib/voice';
 import {
   addWord,
   deleteBlob,
@@ -769,7 +770,7 @@ function WordRow({
               {voiceLabel(word.recording.by, word.recording.proper)}
             </span>
           ) : (
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>{voice ? `${voice.name.split(' ')[0]} okur` : 'Cihaz sesi okur'}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>{settings.voicePack && hasClip(word.say) ? `${VOICE_PACKS.find((p) => p.id === settings.voicePack)?.name.split(' ')[0] ?? 'Hazır ses'} okur` : voice ? `${voice.name.split(' ')[0]} okur` : 'Cihaz sesi okur'}</span>
           )}
         </button>
         <span style={{ fontSize: 14, fontWeight: 500, color: C.muted, width: 74, textAlign: 'right' }}>{word.hidden ? 'Gizli' : 'Görünüyor'}</span>
@@ -1005,24 +1006,34 @@ function VoiceAndParrot() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 600 }}>Okuyan ses</div>
-          {voices.length > 1 ? (
-            <label style={{ display: 'block' }}>
-              <span className="kb-sr">Okuyan ses</span>
-              <select
-                value={current?.voiceURI ?? ''}
-                onChange={(e) => updateSettings({ voiceURI: e.target.value || null })}
-                style={{ maxWidth: '100%', border: 0, background: 'transparent', padding: 0, fontFamily: FONT, fontSize: 13, fontWeight: 500, color: C.muted }}
-              >
-                {voices.map((v) => (
-                  <option key={v.voiceURI} value={v.voiceURI}>
-                    {v.name} · Türkçe · aile kayıtları önce
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <div style={{ fontSize: 13, fontWeight: 500, color: C.muted }}>
-              {current ? `${current.name} · Türkçe · aile kayıtları önce` : 'Türkçe ses bulunamadı · aile kayıtları önce'}
+          <label style={{ display: 'block' }}>
+            <span className="kb-sr">Okuyan ses</span>
+            <select
+              value={settings.voicePack ? `pack:${settings.voicePack}` : (current?.voiceURI ?? '')}
+              onChange={(e) => {
+                const v = e.target.value;
+                const voicePack = v.startsWith('pack:') ? v.slice(5) : null;
+                updateSettings(voicePack ? { voicePack } : { voicePack: null, voiceURI: v || null });
+                setVoicePack(voicePack);
+                previewVoice(voicePack ? settings.voiceURI : v || null, settings.parrotName);
+              }}
+              style={{ maxWidth: '100%', border: 0, background: 'transparent', padding: 0, fontFamily: FONT, fontSize: 13, fontWeight: 500, color: C.muted }}
+            >
+              {VOICE_PACKS.map((p) => (
+                <option key={p.id} value={`pack:${p.id}`}>
+                  {p.name} · aile kayıtları önce
+                </option>
+              ))}
+              {voices.map((v) => (
+                <option key={v.voiceURI} value={v.voiceURI}>
+                  {v.name} · cihaz sesi · aile kayıtları önce
+                </option>
+              ))}
+            </select>
+          </label>
+          {settings.voicePack && (
+            <div style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginTop: 2 }}>
+              Ailenin yazdığı yeni kelimeleri {current ? current.name : 'cihaz sesi'} okur.
             </div>
           )}
         </div>

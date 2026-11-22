@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-22 (voice)
+- **A young man's voice reads the board.** Every built-in word, ready-made picture and word form (346 in all) is now prerecorded in a young male Turkish voice, "Ahmet". It is the default and sounds the same on every iPad and iPhone, offline too. Konuşma hızı (Yavaş / Normal / Hızlı) works with it.
+- Ayarlar → Ses ve papağan → Okuyan ses: choose Ahmet or a device voice. Words the family types themselves are still read by the device voice for now. A word with a family recording still plays that recording; delete the recording in Ayarlar to hear Ahmet instead.
+
 ## 2026-11-22 (Kişiler)
 - **Kişiler: Barış, Güler Teyze and Dayı are on the board.** Güler Teyze takes the place of the hidden "Teyze" card, Dayı is shown again, and Barış goes in the next free place. Nothing else moves. Each has forms when held (Barış'a, Güler Teyze'ye, dayıma…). Barış and Güler Teyze use a placeholder picture for now: Ayarlar → the word → Fotoğraf to give them a real photo.
 - One-time board changes like this one now run only once, so a word hidden again later stays hidden.

@@ -1,20 +1,36 @@
 import type { Word } from './data';
 import { blobUrl } from './store';
+import { clipUrl } from './voice';
 
-/** Speech: a family recording plays first when a word has one; otherwise the
- *  device's Turkish voice reads it. */
+/** Speech: a family recording plays first when a word has one; then the
+ *  prerecorded voice (Ahmet) when the word has a clip; otherwise the device's
+ *  Turkish voice reads it. */
 
 const synth: SpeechSynthesis | null = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
 let audio: HTMLAudioElement | null = null;
 let unlocked = false;
 let token = 0;
 let rate = 0.95;
+let clipRate = 1;
+let pack: string | null = null;
 
 const RATES = { slow: 0.75, normal: 0.95, fast: 1.15 } as const;
+const CLIP_RATES = { slow: 0.8, normal: 1, fast: 1.2 } as const;
 
-/** Set how fast the device voice reads (from Ayarlar). */
+/** Set how fast the voice reads (from Ayarlar). */
 export function setSpeechRate(r: keyof typeof RATES) {
   rate = RATES[r] ?? 0.95;
+  clipRate = CLIP_RATES[r] ?? 1;
+}
+
+/** Choose the prerecorded voice, or null for the device voice only. */
+export function setVoicePack(p: string | null) {
+  pack = p;
+}
+
+/** True when this text will be read by the prerecorded voice. */
+export function hasClip(text: string): boolean {
+  return clipUrl(pack, text) !== null;
 }
 
 function sharedAudio(): HTMLAudioElement {
@@ -100,6 +116,11 @@ function speakText(text: string, voiceURI: string | null, my: number): Promise<v
 async function playRecording(key: string, my: number): Promise<boolean> {
   const url = await blobUrl(key);
   if (!url || my !== token) return false;
+  return playUrl(url, my, 1);
+}
+
+function playUrl(url: string, my: number, speed = clipRate): Promise<boolean> {
+  if (my !== token) return Promise.resolve(false);
   const a = sharedAudio();
   return new Promise((resolve) => {
     let done = false;
@@ -112,6 +133,8 @@ async function playRecording(key: string, my: number): Promise<boolean> {
     a.onended = () => finish(true);
     a.onerror = () => finish(false);
     a.src = url;
+    a.playbackRate = speed;
+    (a as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
     a.play().catch(() => finish(false));
   });
 }
@@ -121,6 +144,8 @@ export async function sayWord(word: Pick<Word, 'say' | 'recording'>, voiceURI: s
   stopSpeaking();
   const my = token;
   if (word.recording && (await playRecording(word.recording.key, my))) return;
+  const clip = clipUrl(pack, word.say);
+  if (clip && (await playUrl(clip, my))) return;
   await speakText(word.say, voiceURI, my);
 }
 
@@ -137,6 +162,8 @@ export async function saySentence(
     onWord(i);
     const w = words[i];
     if (w.recording && (await playRecording(w.recording.key, my))) continue;
+    const clip = clipUrl(pack, w.say);
+    if (clip && (await playUrl(clip, my))) continue;
     await speakText(w.say, voiceURI, my);
   }
   return my === token;
@@ -145,5 +172,7 @@ export async function saySentence(
 /** Preview a voice in Ayarlar. */
 export function previewVoice(voiceURI: string | null, parrotName: string) {
   stopSpeaking();
-  void speakText(`Merhaba, ben ${parrotName}. Birlikte konuşalım.`, voiceURI, token);
+  const clip = clipUrl(pack, 'Merhaba. Birlikte konuşalım.');
+  if (clip) void playUrl(clip, token);
+  else void speakText(`Merhaba, ben ${parrotName}. Birlikte konuşalım.`, voiceURI, token);
 }

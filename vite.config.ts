@@ -21,7 +21,7 @@ export default defineConfig({
         icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,mp3}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/(api|static)\.arasaac\.org\//,
