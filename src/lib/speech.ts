@@ -33,6 +33,80 @@ export function hasClip(text: string): boolean {
   return clipUrl(pack, text) !== null;
 }
 
+// ---- Prerecorded clips play through Web Audio from memory: no loading or
+// decoding at the moment of the tap, so the word starts at once.
+type AudioCtx = AudioContext;
+let ctx: AudioCtx | null = null;
+let source: AudioBufferSourceNode | null = null;
+const buffers = new Map<string, Promise<AudioBuffer | null>>();
+
+function audioContext(): AudioCtx | null {
+  if (ctx) return ctx;
+  const C = typeof window !== 'undefined' ? (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext) : undefined;
+  if (!C) return null;
+  try {
+    ctx = new C();
+  } catch {
+    ctx = null;
+  }
+  return ctx;
+}
+
+function loadBuffer(url: string): Promise<AudioBuffer | null> {
+  let p = buffers.get(url);
+  if (!p) {
+    const c = audioContext();
+    p = c
+      ? fetch(url)
+          .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+          .then((data) => new Promise<AudioBuffer>((resolve, reject) => c.decodeAudioData(data, resolve, reject)))
+          .catch(() => {
+            buffers.delete(url);
+            return null;
+          })
+      : Promise.resolve(null);
+    buffers.set(url, p);
+  }
+  return p;
+}
+
+/** Load the clips for these words into memory ahead of time (the visible board). */
+export function preloadClips(voicePack: string | null, texts: string[]) {
+  for (const t of texts) {
+    const url = clipUrl(voicePack, t);
+    if (url) void loadBuffer(url);
+  }
+}
+
+/** Play a prerecorded clip. False if it could not be played (the caller falls back). */
+async function playClip(url: string, my: number): Promise<boolean> {
+  // Web Audio cannot slow a voice down without changing its pitch, so other
+  // speeds use the audio element, which keeps the pitch.
+  const c = clipRate === 1 ? audioContext() : null;
+  if (!c) return playUrl(url, my);
+  const buf = await loadBuffer(url);
+  if (my !== token) return false;
+  if (!buf) return playUrl(url, my);
+  if (c.state !== 'running') void c.resume().catch(() => undefined);
+  return new Promise((resolve) => {
+    const node = c.createBufferSource();
+    node.buffer = buf;
+    node.connect(c.destination);
+    source = node;
+    let done = false;
+    const finish = (ok: boolean) => {
+      if (done) return;
+      done = true;
+      if (source === node) source = null;
+      resolve(ok);
+    };
+    node.onended = () => finish(my === token);
+    // Safety net if the context stays suspended.
+    setTimeout(() => finish(my === token), buf.duration * 1000 + 800);
+    node.start();
+  });
+}
+
 function sharedAudio(): HTMLAudioElement {
   if (!audio) {
     audio = new Audio();
@@ -44,9 +118,22 @@ function sharedAudio(): HTMLAudioElement {
 /** iOS only lets audio and speech start from a touch. Call this on the first
  *  pointerdown so later (delayed) playback is allowed. */
 export function unlockAudio() {
+  // Every touch: make sure Web Audio is running (iOS suspends it in the background).
+  const c = audioContext();
+  if (c && c.state !== 'running') void c.resume().catch(() => undefined);
   if (unlocked) return;
   unlocked = true;
   try {
+    // Play through the silent switch like the device voice and recordings do (Safari 17+).
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback';
+    if (c) {
+      const b = c.createBuffer(1, 1, 22050);
+      const n = c.createBufferSource();
+      n.buffer = b;
+      n.connect(c.destination);
+      n.start();
+    }
     if (synth) {
       const u = new SpeechSynthesisUtterance(' ');
       u.volume = 0;
@@ -85,6 +172,14 @@ export function pickVoice(voiceURI: string | null): SpeechSynthesisVoice | null 
 export function stopSpeaking() {
   token++;
   synth?.cancel();
+  if (source) {
+    try {
+      source.stop();
+    } catch {
+      /* already stopped */
+    }
+    source = null;
+  }
   if (audio) {
     audio.pause();
     audio.onended = null;
@@ -145,7 +240,7 @@ export async function sayWord(word: Pick<Word, 'say' | 'recording'>, voiceURI: s
   const my = token;
   if (word.recording && (await playRecording(word.recording.key, my))) return;
   const clip = clipUrl(pack, word.say);
-  if (clip && (await playUrl(clip, my))) return;
+  if (clip && (await playClip(clip, my))) return;
   await speakText(word.say, voiceURI, my);
 }
 
@@ -163,7 +258,7 @@ export async function saySentence(
     const w = words[i];
     if (w.recording && (await playRecording(w.recording.key, my))) continue;
     const clip = clipUrl(pack, w.say);
-    if (clip && (await playUrl(clip, my))) continue;
+    if (clip && (await playClip(clip, my))) continue;
     await speakText(w.say, voiceURI, my);
   }
   return my === token;
@@ -173,6 +268,6 @@ export async function saySentence(
 export function previewVoice(voiceURI: string | null, parrotName: string) {
   stopSpeaking();
   const clip = clipUrl(pack, 'Merhaba. Birlikte konuşalım.');
-  if (clip) void playUrl(clip, token);
+  if (clip) void playClip(clip, token);
   else void speakText(`Merhaba, ben ${parrotName}. Birlikte konuşalım.`, voiceURI, token);
 }

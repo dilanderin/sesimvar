@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-22 (faster speech)
+- **A tapped word is spoken at once.** It used to wait until the picture had flown into the balloon (about 0.6 s), and the voice clip was loaded at that moment. Now the word is said the moment it is tapped, while the picture flies, and the clips of every word on screen are kept ready in memory.
+
 ## 2026-11-22 (iPhone)
 - **Sesim Var now has its own iPhone layout** instead of a shrunken iPad screen. Upright: the balloon spans the width, with Oku, Gönder and the small buttons in a row under it, and the board shows 3 × 4 cards (the same 12 places in the same order). Sideways: everything in one compact screen. The category bar scrolls sideways. Cards grow or shrink to fit the phone, and Düğme boyutu still works.
 - The app keeps clear of the iPhone's notch and home bar.

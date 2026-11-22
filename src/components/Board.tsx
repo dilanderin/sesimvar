@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { Check, History, Settings as SettingsIcon, X } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, SLOTS_PER_CATEGORY, type Category, type CategoryId, type Word } from '../lib/data';
 import { DECOR } from '../lib/decor';
-import { saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
+import { preloadClips, saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
 import { wordForms } from '../lib/forms';
 import { isValidAddress, openMessages, sentenceText, smsUrl } from '../lib/messages';
 import { clearHistory, rememberSentence, useAppState } from '../lib/store';
@@ -141,6 +141,12 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     () => settings.core.map((id) => words.find((w) => w.id === id)).filter((w): w is Word => !!w),
     [settings.core, words],
   );
+  // Keep the voice clips of everything on screen in memory, so a tap speaks at once.
+  useEffect(() => {
+    const onScreen = [...coreWords, ...slots.filter((w): w is Word => !!w)];
+    preloadClips(settings.voicePack, onScreen.map((w) => w.say));
+    if (settings.wordForms) preloadClips(settings.voicePack, onScreen.flatMap((w) => wordForms(w)));
+  }, [coreWords, slots, settings.voicePack, settings.wordForms]);
 
   // Keep sentence words in sync with edits made in Ayarlar; drop deleted ones.
   useEffect(() => {
@@ -198,6 +204,8 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       setSparkles((s) => [...s, { id: sid, rect: from, color: t.base }]);
       later(520, () => setSparkles((s) => s.filter((x) => x.id !== sid)));
       showPose('look');
+      // Say the word right away; the picture flies to the balloon meanwhile.
+      void sayWord(spoken(word, form), settings.voiceURI);
       setChips((cs) => [...cs, { uid, word, tones: t, pending: true, popping: false, form }]);
 
       // 300–600 ms: the picture flies to its place in the balloon.
@@ -220,9 +228,8 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       setChips((cs) => cs.map((c) => (c.uid === flight.uid ? { ...c, pending: false, popping: true } : c)));
       later(260, () => setChips((cs) => cs.map((c) => (c.uid === flight.uid ? { ...c, popping: false } : c))));
       showPose('hop', 420);
-      void sayWord(spoken(flight.word, flight.form), settings.voiceURI);
     },
-    [later, settings.voiceURI, showPose],
+    [later, showPose],
   );
 
   // ------------------------------------------------ word forms (hold a card)
