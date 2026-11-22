@@ -1,4 +1,4 @@
-import { forwardRef, useRef, type CSSProperties, type ReactNode } from 'react';
+import { forwardRef, useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { ArrowUp, Delete, Hand, Trash2, Volume2 } from 'lucide-react';
 import type { Category, Word } from '../lib/data';
 import type { Theme, Tones } from '../lib/theme';
@@ -93,10 +93,12 @@ interface WordCardProps {
   onTap: (word: Word, circle: HTMLElement) => void;
   /** Set when the word has forms and "Kelime çekimleri" is on. */
   onLongPress?: (word: Word, card: HTMLElement) => void;
+  /** Phone layout: tighter padding and a smaller label. */
+  compact?: boolean;
   children?: ReactNode;
 }
 
-export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture, onTap, onLongPress, children }: WordCardProps) {
+export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture, onTap, onLongPress, compact, children }: WordCardProps) {
   const lp = useLongPress(onLongPress ? (el) => onLongPress(word, el) : undefined);
   return (
     <button
@@ -113,8 +115,8 @@ export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture,
         position: 'relative',
         minHeight: 0,
         minWidth: 0,
-        padding: '10px 8px 12px',
-        borderRadius: 36,
+        padding: compact ? '6px 4px 8px' : '10px 8px 12px',
+        borderRadius: compact ? 22 : 36,
         background: theme.surface,
         ['--kb-shadow' as string]: `0 12px 24px ${tones.cardShadow}`,
         ['--kb-shadow-pressed' as string]: `0 5px 10px ${tones.cardShadow}`,
@@ -134,7 +136,7 @@ export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture,
           height: size.circle,
           borderRadius: '50%',
           background: tones.cardCircle,
-          boxShadow: tones.cardRing ? `0 0 0 5px ${tones.cardRing}` : 'none',
+          boxShadow: tones.cardRing ? `0 0 0 ${compact ? 3 : 5}px ${tones.cardRing}` : 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -148,7 +150,7 @@ export function WordCard({ word, tones, theme, size, ring, jelly, hiddenPicture,
       </div>
       <span
         style={{
-          fontSize: labelSize(word.label, 23),
+          fontSize: labelSize(word.label, compact ? 16 : 23),
           fontWeight: 600,
           color: theme.text,
           whiteSpace: 'nowrap',
@@ -175,6 +177,7 @@ export function CoreTile({
   ringColor,
   onTap,
   onLongPress,
+  compact,
 }: {
   word: Word;
   theme: Theme;
@@ -183,9 +186,10 @@ export function CoreTile({
   ringColor: string;
   onTap: (word: Word, circle: HTMLElement) => void;
   onLongPress?: (word: Word, card: HTMLElement) => void;
+  compact?: boolean;
 }) {
   const portrait = orientation === 'portrait';
-  const circle = portrait ? 50 : 54;
+  const circle = compact ? 34 : portrait ? 50 : 54;
   const lp = useLongPress(onLongPress ? (el) => onLongPress(word, el) : undefined);
   return (
     <button
@@ -199,10 +203,10 @@ export function CoreTile({
       }}
       style={{
         ...resetButton,
-        height: portrait ? 100 : 90,
+        height: compact ? 60 : portrait ? 100 : 90,
         minWidth: 0,
-        padding: '0 6px',
-        borderRadius: 30,
+        padding: compact ? '0 2px' : '0 6px',
+        borderRadius: compact ? 18 : 30,
         background: theme.surface,
         ['--kb-shadow' as string]: `0 8px 18px ${theme.shadow(0.1)}`,
         ['--kb-shadow-pressed' as string]: `0 3px 8px ${theme.shadow(0.1)}`,
@@ -228,9 +232,9 @@ export function CoreTile({
           overflow: 'hidden',
         }}
       >
-        <WordPicture picture={word.picture} label={word.label} size={44} />
+        <WordPicture picture={word.picture} label={word.label} size={compact ? 30 : 44} />
       </div>
-      <span style={{ fontSize: portrait ? 18 : 19, fontWeight: 600, color: theme.text, whiteSpace: 'nowrap', lineHeight: 1.1 }}>
+      <span style={{ fontSize: compact ? (word.label.length > 7 ? 11 : 12.5) : portrait ? 18 : 19, fontWeight: 600, color: theme.text, whiteSpace: 'nowrap', lineHeight: 1.1, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {word.label}
       </span>
     </button>
@@ -252,9 +256,10 @@ export interface ChipState {
 
 export const SentenceChip = forwardRef<
   HTMLSpanElement,
-  { chip: ChipState; theme: Theme; orientation: Orientation; reading: boolean; motion: boolean; first: boolean }
->(function SentenceChip({ chip, theme, orientation, reading, motion, first }, ref) {
+  { chip: ChipState; theme: Theme; orientation: Orientation; reading: boolean; motion: boolean; first: boolean; compact?: boolean }
+>(function SentenceChip({ chip, theme, orientation, reading, motion, first, compact }, ref) {
   const portrait = orientation === 'portrait';
+  const c = compact ? { h: 50, pad: '0 14px 0 6px', r: 18, circle: 38, img: 31, font: 20, gap: 7 } : null;
   const t = chip.tones;
   const lift = reading && motion;
   return (
@@ -266,14 +271,14 @@ export const SentenceChip = forwardRef<
         position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 10,
-        height: portrait ? 72 : 80,
+        gap: c ? c.gap : 10,
+        height: c ? c.h : portrait ? 72 : 80,
         boxSizing: 'border-box',
-        padding: portrait ? '0 21px 0 10px' : '0 24px 0 11px',
-        borderRadius: portrait ? 25 : 28,
+        padding: c ? c.pad : portrait ? '0 21px 0 10px' : '0 24px 0 11px',
+        borderRadius: c ? c.r : portrait ? 25 : 28,
         background: reading ? t.navActive : t.pill,
         boxShadow: `0 8px 16px ${t.pillShadow}, inset 0 -5px 0 ${t.pillInset}`,
-        transform: lift ? 'translateY(-10px)' : 'none',
+        transform: lift ? `translateY(${c ? -5 : -10}px)` : 'none',
         transition: motion ? 'transform 120ms cubic-bezier(.3,1.6,.5,1), background 120ms' : 'background 100ms',
         flex: 'none',
         visibility: chip.pending ? 'hidden' : 'visible',
@@ -282,8 +287,8 @@ export const SentenceChip = forwardRef<
       <div
         data-chip-circle
         style={{
-          width: portrait ? 52 : 58,
-          height: portrait ? 52 : 58,
+          width: c ? c.circle : portrait ? 52 : 58,
+          height: c ? c.circle : portrait ? 52 : 58,
           borderRadius: '50%',
           background: '#FFFFFF',
           display: 'flex',
@@ -293,9 +298,9 @@ export const SentenceChip = forwardRef<
           flex: 'none',
         }}
       >
-        <WordPicture picture={chip.word.picture} label={chip.word.label} size={portrait ? 42 : 47} color={t.base} />
+        <WordPicture picture={chip.word.picture} label={chip.word.label} size={c ? c.img : portrait ? 42 : 47} color={t.base} />
       </div>
-      <span style={{ fontSize: portrait ? 26 : 30, fontWeight: 600, color: theme.text, lineHeight: 1, whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: c ? c.font : portrait ? 26 : 30, fontWeight: 600, color: theme.text, lineHeight: 1, whiteSpace: 'nowrap' }}>
         {first ? upperFirstTr(chip.form ?? chip.word.say) : (chip.form ?? chip.word.say)}
       </span>
       {reading && (
@@ -305,7 +310,7 @@ export const SentenceChip = forwardRef<
             position: 'absolute',
             left: '12%',
             right: '12%',
-            bottom: lift ? -16 : -10,
+            bottom: c ? (lift ? -9 : -6) : lift ? -16 : -10,
             height: 5,
             borderRadius: 3,
             background: t.base,
@@ -316,27 +321,27 @@ export const SentenceChip = forwardRef<
   );
 });
 
-export function EmptyHint({ theme }: { theme: Theme }) {
+export function EmptyHint({ theme, compact }: { theme: Theme; compact?: boolean }) {
   const color = theme.mode === 'day' ? '#8A5A4A' : '#A7C4C2';
   return (
     <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 12,
-        height: 80,
+        gap: compact ? 8 : 12,
+        height: compact ? 50 : 80,
         boxSizing: 'border-box',
-        padding: '0 26px 0 22px',
-        borderRadius: 28,
-        border: `3px dashed ${theme.mode === 'day' ? '#E3C3B2' : '#3B6075'}`,
+        padding: compact ? '0 14px 0 12px' : '0 26px 0 22px',
+        borderRadius: compact ? 18 : 28,
+        border: `${compact ? 2 : 3}px dashed ${theme.mode === 'day' ? '#E3C3B2' : '#3B6075'}`,
         color,
-        fontSize: 24,
+        fontSize: compact ? 17 : 24,
         fontWeight: 600,
         whiteSpace: 'nowrap',
         flex: 'none',
       }}
     >
-      <Hand size={28} strokeWidth={2.4} aria-hidden="true" />
+      <Hand size={compact ? 20 : 28} strokeWidth={2.4} aria-hidden="true" />
       Bir resme dokun
     </span>
   );
@@ -347,11 +352,13 @@ export function RoundIconButton({
   theme,
   onClick,
   children,
+  compact,
 }: {
   label: string;
   theme: Theme;
   onClick: () => void;
   children: ReactNode;
+  compact?: boolean;
 }) {
   return (
     <button
@@ -361,8 +368,8 @@ export function RoundIconButton({
       onClick={onClick}
       style={{
         ...resetButton,
-        width: 52,
-        height: 52,
+        width: compact ? 44 : 52,
+        height: compact ? 44 : 52,
         flex: 'none',
         borderRadius: '50%',
         background: theme.roundBtn,
@@ -391,6 +398,7 @@ export function ActionButton({
   launching,
   disabled,
   onClick,
+  compact,
 }: {
   kind: 'oku' | 'gonder';
   theme: Theme;
@@ -399,8 +407,10 @@ export function ActionButton({
   launching?: boolean;
   disabled?: boolean;
   onClick: () => void;
+  /** Phone layout: a small row button (width/height in stage px). */
+  compact?: { w: number; h: number };
 }) {
-  const portrait = orientation === 'portrait';
+  const portrait = orientation === 'portrait' || !!compact;
   const bg = kind === 'oku' ? theme.oku : theme.gonder;
   const inset = kind === 'oku' ? theme.okuInset : theme.gonderInset;
   const glow = kind === 'oku' ? 'rgba(232,89,12,0.35)' : theme.mode === 'day' ? 'rgba(15,157,94,0.32)' : 'rgba(18,168,102,0.35)';
@@ -414,10 +424,10 @@ export function ActionButton({
       style={{
         ...resetButton,
         position: 'relative',
-        width: portrait ? (kind === 'oku' ? 200 : 230) : 124,
-        height: portrait ? 84 : 118,
+        width: compact ? compact.w : portrait ? (kind === 'oku' ? 200 : 230) : 124,
+        height: compact ? compact.h : portrait ? 84 : 118,
         flex: 'none',
-        borderRadius: portrait ? 32 : 38,
+        borderRadius: compact ? 22 : portrait ? 32 : 38,
         background: bg,
         ['--kb-shadow' as string]: `0 14px 26px ${glow}, inset 0 -8px 0 ${inset}, inset 0 4px 0 rgba(255,255,255,0.35)`,
         ['--kb-shadow-pressed' as string]: `0 6px 12px ${glow}, inset 0 -3px 0 ${inset}, inset 0 4px 0 rgba(255,255,255,0.35)`,
@@ -425,22 +435,22 @@ export function ActionButton({
         flexDirection: portrait ? 'row' : 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: portrait ? 12 : 4,
-        fontSize: portrait ? 24 : 22,
+        gap: compact ? 7 : portrait ? 12 : 4,
+        fontSize: compact ? 18 : portrait ? 24 : 22,
         fontWeight: 600,
         color: '#FFFFFF',
-        outline: active ? `8px solid ${kind === 'oku' ? 'rgba(232,89,12,0.28)' : 'rgba(15,157,94,0.28)'}` : '0px solid transparent',
+        outline: active ? `${compact ? 5 : 8}px solid ${kind === 'oku' ? 'rgba(232,89,12,0.28)' : 'rgba(15,157,94,0.28)'}` : '0px solid transparent',
         transition: 'outline 300ms ease-out',
       }}
     >
       {kind === 'oku' ? (
-        <Volume2 size={portrait ? 36 : 40} strokeWidth={2.4} aria-hidden="true" />
+        <Volume2 size={compact ? 26 : portrait ? 36 : 40} strokeWidth={2.4} aria-hidden="true" />
       ) : (
         <span
           style={{
             position: 'relative',
-            width: 46,
-            height: 46,
+            width: compact ? 32 : 46,
+            height: compact ? 32 : 46,
             flex: 'none',
             borderRadius: '50%',
             background: '#FFFFFF',
@@ -450,7 +460,7 @@ export function ActionButton({
           }}
         >
           <span className={launching ? 'kb-arrow' : undefined} style={{ display: 'flex' }}>
-            <ArrowUp size={28} strokeWidth={3.2} color={bg} aria-hidden="true" />
+            <ArrowUp size={compact ? 20 : 28} strokeWidth={3.2} color={bg} aria-hidden="true" />
           </span>
           {launching && (
             <span className="kb-speedlines" aria-hidden="true">
@@ -475,6 +485,7 @@ export function CategoryNav({
   orientation,
   toneFor,
   onSelect,
+  compact,
 }: {
   categories: Category[];
   current: string;
@@ -482,18 +493,30 @@ export function CategoryNav({
   orientation: Orientation;
   toneFor: (c: Category) => Tones;
   onSelect: (c: Category) => void;
+  /** Phone layout: smaller buttons in a bar that scrolls sideways. */
+  compact?: boolean;
 }) {
   const portrait = orientation === 'portrait';
+  const navRef = useRef<HTMLElement>(null);
+  // Keep the chosen category in view when the bar scrolls (phones).
+  useEffect(() => {
+    if (!compact) return;
+    const el = navRef.current?.querySelector('[aria-pressed="true"]') as HTMLElement | null;
+    el?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [compact, current]);
   return (
     <nav
+      ref={navRef}
       aria-label="Kategoriler"
+      className={compact ? 'kb-noscrollbar' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 4,
-        padding: portrait ? '9px 10px' : '9px 12px',
+        gap: compact ? 2 : 4,
+        padding: compact ? '14px 8px 6px' : portrait ? '9px 10px' : '9px 12px',
+        ...(compact ? { overflowX: 'auto', maxWidth: '100%', boxSizing: 'border-box', marginTop: -8 } : null),
         background: theme.surface,
-        borderRadius: 36,
+        borderRadius: compact ? 26 : 36,
         boxShadow: `0 18px 40px ${theme.shadow(0.2)}, inset 0 -5px 0 ${theme.surfaceInset}`,
       }}
     >
@@ -511,24 +534,24 @@ export function CategoryNav({
                 ...resetButton,
                 position: 'relative',
                 flex: 'none',
-                height: 80,
-                padding: '0 18px 0 10px',
-                borderRadius: 28,
+                height: compact ? 54 : 80,
+                padding: compact ? '0 12px 0 6px' : '0 18px 0 10px',
+                borderRadius: compact ? 20 : 28,
                 background: t.navActive,
                 boxShadow: `inset 0 -5px 0 ${t.navActiveInset}, 0 8px 16px ${t.navActiveShadow}`,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: compact ? 6 : 10,
               }}
             >
-              <svg viewBox="0 0 40 30" width="32" height="24" aria-hidden="true" style={{ position: 'absolute', top: -15, right: 10 }}>
+              <svg viewBox="0 0 40 30" width={compact ? 24 : 32} height={compact ? 18 : 24} aria-hidden="true" style={{ position: 'absolute', top: compact ? -11 : -15, right: compact ? 6 : 10 }}>
                 <path d="M4 26 C 8 6, 26 2, 38 4 C 34 18, 20 26, 4 26 Z" fill={theme.leaf} />
                 <path d="M6 25 C 16 18, 26 10, 36 5" stroke={theme.mode === 'day' ? '#1E8F5A' : theme.leafVein} strokeWidth="2.5" fill="none" strokeLinecap="round" />
               </svg>
               <div
                 style={{
-                  width: portrait ? 56 : 60,
-                  height: portrait ? 56 : 60,
+                  width: compact ? 40 : portrait ? 56 : 60,
+                  height: compact ? 40 : portrait ? 56 : 60,
                   flex: 'none',
                   borderRadius: '50%',
                   background: '#FFFFFF',
@@ -537,9 +560,9 @@ export function CategoryNav({
                   justifyContent: 'center',
                 }}
               >
-                <img src={c.icon} alt="" draggable={false} style={{ width: 46, height: 46, objectFit: 'contain', display: 'block' }} />
+                <img src={c.icon} alt="" draggable={false} style={{ width: compact ? 32 : 46, height: compact ? 32 : 46, objectFit: 'contain', display: 'block' }} />
               </div>
-              <span style={{ fontSize: portrait ? 17 : 19, fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', lineHeight: 1 }}>
+              <span style={{ fontSize: compact ? 15 : portrait ? 17 : 19, fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', lineHeight: 1 }}>
                 {c.name}
               </span>
             </button>
@@ -554,23 +577,23 @@ export function CategoryNav({
             style={{
               ...resetButton,
               flex: 'none',
-              width: portrait ? 76 : 98,
-              height: 80,
-              borderRadius: 24,
+              width: compact ? 58 : portrait ? 76 : 98,
+              height: compact ? 54 : 80,
+              borderRadius: compact ? 18 : 24,
               background: 'transparent',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 6,
+              gap: compact ? 3 : 6,
             }}
           >
             <div
               style={{
-                width: portrait ? 48 : 52,
-                height: portrait ? 48 : 52,
+                width: compact ? 34 : portrait ? 48 : 52,
+                height: compact ? 34 : portrait ? 48 : 52,
                 boxSizing: 'border-box',
-                borderRadius: 17,
+                borderRadius: compact ? 12 : 17,
                 background: t.navIcon,
                 boxShadow: t.navRing ? `0 0 0 3px ${t.navRing}` : 'none',
                 display: 'flex',
@@ -578,9 +601,9 @@ export function CategoryNav({
                 justifyContent: 'center',
               }}
             >
-              <img src={c.icon} alt="" draggable={false} style={{ width: 38, height: 38, objectFit: 'contain', display: 'block' }} />
+              <img src={c.icon} alt="" draggable={false} style={{ width: compact ? 26 : 38, height: compact ? 26 : 38, objectFit: 'contain', display: 'block' }} />
             </div>
-            <span style={{ fontSize: portrait ? 14 : 15, fontWeight: 600, color: theme.mode === 'day' ? theme.text : theme.muted, whiteSpace: 'nowrap', lineHeight: 1 }}>
+            <span style={{ fontSize: compact ? 11 : portrait ? 14 : 15, fontWeight: 600, color: theme.mode === 'day' ? theme.text : theme.muted, whiteSpace: 'nowrap', lineHeight: 1 }}>
               {c.name}
             </span>
           </button>

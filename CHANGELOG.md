@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-22 (iPhone)
+- **Sesim Var now has its own iPhone layout** instead of a shrunken iPad screen. Upright: the balloon spans the width, with Oku, Gönder and the small buttons in a row under it, and the board shows 3 × 4 cards (the same 12 places in the same order). Sideways: everything in one compact screen. The category bar scrolls sideways. Cards grow or shrink to fit the phone, and Düğme boyutu still works.
+- The app keeps clear of the iPhone's notch and home bar.
+- **Ayarlar on iPhone** is one scrolling page (two columns when sideways).
+- iPad looks exactly as before.
+- The voice is now the one the family picked: Ahmet, "daha genç" (a bit higher and quicker).
+
 ## 2026-11-22 (voice)
 - **A young man's voice reads the board.** Every built-in word, ready-made picture and word form (346 in all) is now prerecorded in a young male Turkish voice, "Ahmet". It is the default and sounds the same on every iPad and iPhone, offline too. Konuşma hızı (Yavaş / Normal / Hızlı) works with it.
 - Ayarlar → Ses ve papağan → Okuyan ses: choose Ahmet or a device voice. Words the family types themselves are still read by the device voice for now. A word with a family recording still plays that recording; delete the recording in Ayarlar to hear Ahmet instead.

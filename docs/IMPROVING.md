@@ -38,7 +38,7 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 
 - **Gönder** sends the sentence to the owner in the Messages app (2026-11-21). It opens Messages with the text filled in; iOS requires one tap on send. Without an address it only speaks.
 - Changes are pushed directly to `main`, without pull requests.
-- **Voice** (2026-11-22): the person who uses the board wants a young (about 20) male voice, not a family member's. The prerecorded "Ahmet" voice (Microsoft tr-TR-AhmetNeural, pitch +8 Hz, rate +4%) is the default. Family recordings still play first when a word has one.
+- **Voice** (2026-11-22): the person who uses the board wants a young (about 20) male voice, not a family member's. The prerecorded "Ahmet" voice (Microsoft tr-TR-AhmetNeural, pitch +16 Hz, rate +6%; the owner picked this one, "daha genç") is the default. Family recordings still play first when a word has one.
 
 ## Ask the family (don't do without the owner)
 

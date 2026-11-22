@@ -13,9 +13,9 @@ import asyncio, json, os, subprocess, sys, tempfile
 import edge_tts
 
 PACKS = {
-    # Microsoft's Turkish male neural voice, pitched up slightly and a touch
+    # Microsoft's Turkish male neural voice, pitched up and a touch
     # quicker to sound like a young man (about 20).
-    'ahmet': dict(voice='tr-TR-AhmetNeural', pitch='+8Hz', rate='+4%'),
+    'ahmet': dict(voice='tr-TR-AhmetNeural', pitch='+16Hz', rate='+6%'),
 }
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

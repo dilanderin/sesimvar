@@ -24,7 +24,7 @@ import { Confetti, Flyer, Sparkles } from './Effects';
 import { Parrot, ParrotLeaf, type ParrotPose } from './Parrot';
 import { WordPicture } from './WordPicture';
 import { upperFirstTr } from '../lib/turkish';
-import { STAGE, toStageRect, useStage } from './Stage';
+import { toStageRect, useStage } from './Stage';
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -55,10 +55,10 @@ const SETTINGS_HOLD_MS = 2_000;
 
 export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings: () => void }) {
   const { words, settings, history } = useAppState();
-  const { orientation, scale } = useStage();
+  const { orientation, scale, phone, w: stageW, h: stageH } = useStage();
   const portrait = orientation === 'portrait';
   const motion = settings.motion;
-  const size = CARD_SIZES[settings.size];
+  const size = phone ? phoneCardSize(settings.size, orientation, stageH) : CARD_SIZES[settings.size];
 
   const [categoryId, setCategoryId] = useState<CategoryId>('temel');
   const [chips, setChips] = useState<ChipState[]>([]);
@@ -360,11 +360,17 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     if (holdTimer.current) clearTimeout(holdTimer.current);
   };
 
-  const decor = DECOR[`${theme.mode}${portrait ? 'Portrait' : 'Landscape'}` as keyof typeof DECOR];
-  const { w: stageW, h: stageH } = STAGE[orientation];
+  const decor = useMemo(() => {
+    const art = DECOR[`${theme.mode}${portrait ? 'Portrait' : 'Landscape'}` as keyof typeof DECOR];
+    return phone ? fitDecor(art, portrait ? 834 : 1194, portrait ? 1194 : 834, stageW, stageH) : art;
+  }, [theme.mode, portrait, phone, stageW, stageH]);
 
   // ------------------------------------------------------------- pieces
-  const parrotBlock = (
+  const parrotBlock = phone ? (
+    <div style={{ position: 'relative', zIndex: 1, flex: 'none', width: portrait ? 54 : 50, display: 'flex', justifyContent: 'center', alignSelf: 'flex-end' }}>
+      <Parrot pose={pose} name={settings.parrotName} motion={motion} width={portrait ? 54 : 48} height={portrait ? 59 : 52} />
+    </div>
+  ) : (
     <div style={{ position: 'relative', zIndex: 1, flex: 'none', width: 148, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ marginBottom: -40, position: 'relative', zIndex: 2 }}>
         <Parrot pose={pose} name={settings.parrotName} motion={motion} />
@@ -375,6 +381,20 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     </div>
   );
 
+  const roundButtons = (
+    <>
+      <RoundIconButton label="Son cümleler" theme={theme} compact={phone} onClick={() => setHistoryOpen((o) => !o)}>
+        <History size={phone ? 20 : 22} strokeWidth={2.4} aria-hidden="true" />
+      </RoundIconButton>
+      <RoundIconButton label="Son kelimeyi sil" theme={theme} compact={phone} onClick={backspace}>
+        <BackspaceIcon />
+      </RoundIconButton>
+      <RoundIconButton label="Hepsini temizle" theme={theme} compact={phone} onClick={clearAll}>
+        <TrashIcon />
+      </RoundIconButton>
+    </>
+  );
+
   const balloon = (
     <div
       style={{
@@ -382,15 +402,15 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         zIndex: 1,
         flex: 1,
         minWidth: 0,
-        height: portrait ? 114 : 120,
-        marginBottom: portrait ? 18 : 30,
+        height: phone ? (portrait ? 66 : 60) : portrait ? 114 : 120,
+        marginBottom: phone ? 0 : portrait ? 18 : 30,
         boxSizing: 'border-box',
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '0 16px 0 22px',
+        gap: phone ? 6 : 12,
+        padding: phone ? '0 8px 0 12px' : '0 16px 0 22px',
         background: theme.surface,
-        borderRadius: 42,
+        borderRadius: phone ? 24 : 42,
         boxShadow: `0 16px 32px ${theme.shadow(0.14)}, inset 0 -6px 0 ${theme.surfaceInset}`,
       }}
     >
@@ -398,10 +418,10 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         aria-hidden="true"
         style={{
           position: 'absolute',
-          left: -12,
-          top: portrait ? 45 : 48,
-          width: 26,
-          height: 26,
+          left: phone ? -7 : -12,
+          top: phone ? (portrait ? 26 : 23) : portrait ? 45 : 48,
+          width: phone ? 15 : 26,
+          height: phone ? 15 : 26,
           background: theme.surface,
           borderRadius: 6,
           transform: 'rotate(45deg)',
@@ -420,14 +440,14 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           height: '100%',
           display: 'flex',
           alignItems: 'center',
-          gap: 14,
+          gap: phone ? 8 : 14,
           overflowX: 'auto',
           overflowY: 'visible',
           padding: '0 4px',
           margin: '0 -4px',
         }}
       >
-        {chips.length === 0 && !sent && <EmptyHint theme={theme} />}
+        {chips.length === 0 && !sent && <EmptyHint theme={theme} compact={phone} />}
         {chips.length === 0 && sent && (
           <span
             className={motion ? 'kb-pop' : undefined}
@@ -435,47 +455,55 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 12,
-              height: 64,
-              padding: '0 28px 0 12px',
-              borderRadius: 32,
+              gap: phone ? 8 : 12,
+              height: phone ? 48 : 64,
+              padding: phone ? '0 18px 0 8px' : '0 28px 0 12px',
+              borderRadius: phone ? 24 : 32,
               background: theme.gonder,
               boxShadow: `inset 0 -5px 0 ${theme.gonderInset}`,
               color: '#FFFFFF',
-              fontSize: 26,
+              fontSize: phone ? 19 : 26,
               fontWeight: 600,
               flex: 'none',
             }}
           >
-            <span style={{ width: 42, height: 42, borderRadius: '50%', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Check size={28} strokeWidth={3.4} color={theme.gonder} aria-hidden="true" />
+            <span style={{ width: phone ? 32 : 42, height: phone ? 32 : 42, borderRadius: '50%', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Check size={phone ? 20 : 28} strokeWidth={3.4} color={theme.gonder} aria-hidden="true" />
             </span>
             Gönderildi
           </span>
         )}
         {chips.map((c, i) => (
           <span role="listitem" key={c.uid} style={{ display: 'flex', flex: 'none' }}>
-            <SentenceChip chip={c} theme={theme} orientation={orientation} reading={readingIdx === i} motion={motion} first={i === 0} />
+            <SentenceChip chip={c} theme={theme} orientation={orientation} reading={readingIdx === i} motion={motion} first={i === 0} compact={phone} />
           </span>
         ))}
       </div>
-      <RoundIconButton label="Son cümleler" theme={theme} onClick={() => setHistoryOpen((o) => !o)}>
-        <History size={22} strokeWidth={2.4} aria-hidden="true" />
-      </RoundIconButton>
-      <RoundIconButton label="Son kelimeyi sil" theme={theme} onClick={backspace}>
-        <BackspaceIcon />
-      </RoundIconButton>
-      <RoundIconButton label="Hepsini temizle" theme={theme} onClick={clearAll}>
-        <TrashIcon />
-      </RoundIconButton>
+      {!(phone && portrait) && roundButtons}
     </div>
   );
 
   const okuBtn = (
-    <ActionButton kind="oku" theme={theme} orientation={orientation} active={readingIdx !== null} disabled={!chips.length} onClick={() => void read()} />
+    <ActionButton
+      kind="oku"
+      theme={theme}
+      orientation={orientation}
+      compact={phone ? (portrait ? { w: 82, h: 52 } : { w: 84, h: 60 }) : undefined}
+      active={readingIdx !== null}
+      disabled={!chips.length}
+      onClick={() => void read()}
+    />
   );
   const gonderBtn = (
-    <ActionButton kind="gonder" theme={theme} orientation={orientation} launching={launching} disabled={!chips.length} onClick={send} />
+    <ActionButton
+      kind="gonder"
+      theme={theme}
+      orientation={orientation}
+      compact={phone ? (portrait ? { w: 106, h: 52 } : { w: 108, h: 60 }) : undefined}
+      launching={launching}
+      disabled={!chips.length}
+      onClick={send}
+    />
   );
 
   const gear = (
@@ -491,8 +519,9 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         if (!settings.locked) onOpenSettings();
       }}
       style={{
-        width: 40,
-        height: 40,
+        width: phone ? 30 : 40,
+        height: phone ? 44 : 40,
+        flex: 'none',
         padding: 0,
         border: 0,
         margin: 0,
@@ -502,9 +531,9 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'absolute',
-        top: 8,
-        right: 12,
+        position: phone ? 'relative' : 'absolute',
+        top: phone ? undefined : 8,
+        right: phone ? undefined : 12,
         zIndex: 3,
         cursor: 'pointer',
         touchAction: 'none',
@@ -514,14 +543,38 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     >
       <SettingsIcon size={20} strokeWidth={2.6} aria-hidden="true" />
       {holding && (
-        <svg className="kb-hold" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" style={{ position: 'absolute', inset: 0 }}>
+        <svg className="kb-hold" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto' }}>
           <circle cx="20" cy="20" r="17" fill="none" stroke={theme.gear} strokeWidth="3" strokeLinecap="round" pathLength={100} strokeDasharray="100" />
         </svg>
       )}
     </button>
   );
 
-  const header = portrait ? (
+  const header = phone ? (
+    portrait ? (
+      <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 8px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+          {parrotBlock}
+          {balloon}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          {gear}
+          {roundButtons}
+          <span style={{ flex: 1 }} />
+          {okuBtn}
+          {gonderBtn}
+        </div>
+      </div>
+    ) : (
+      <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', alignItems: 'flex-end', gap: 8, padding: '6px 10px 0' }}>
+        {parrotBlock}
+        {balloon}
+        {okuBtn}
+        {gonderBtn}
+        {gear}
+      </div>
+    )
+  ) : portrait ? (
     <div
       style={{
         position: 'relative',
@@ -575,12 +628,22 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         flex: 'none',
         display: 'grid',
         gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-        gap: portrait ? 10 : 14,
-        padding: portrait ? '8px 22px 0' : '0 30px',
+        gap: phone ? 6 : portrait ? 10 : 14,
+        padding: phone ? (portrait ? '8px 8px 0' : '6px 10px 0') : portrait ? '8px 22px 0' : '0 30px',
       }}
     >
       {coreWords.map((w) => (
-        <CoreTile key={w.id} word={w} theme={theme} orientation={orientation} ring={ringId === w.id} ringColor={tonesForWord(w).base} onTap={tap} onLongPress={longPressFor(w)} />
+        <CoreTile
+          key={w.id}
+          word={w}
+          theme={theme}
+          orientation={orientation}
+          compact={phone}
+          ring={ringId === w.id}
+          ringColor={tonesForWord(w).base}
+          onTap={tap}
+          onLongPress={longPressFor(w)}
+        />
       ))}
     </div>
   );
@@ -591,11 +654,11 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     flex: 1,
     minHeight: 0,
     display: 'grid',
-    gridTemplateColumns: `repeat(${portrait ? 4 : 6}, minmax(0, 1fr))`,
-    gridTemplateRows: `repeat(${portrait ? 3 : 2}, minmax(0, 1fr))`,
-    columnGap: 18,
-    rowGap: portrait ? 18 : 20,
-    padding: portrait ? '22px 30px 18px' : '22px 30px 20px',
+    gridTemplateColumns: `repeat(${phone && portrait ? 3 : portrait ? 4 : 6}, minmax(0, 1fr))`,
+    gridTemplateRows: `repeat(${phone && portrait ? 4 : portrait ? 3 : 2}, minmax(0, 1fr))`,
+    columnGap: phone ? 8 : 18,
+    rowGap: phone ? 8 : portrait ? 18 : 20,
+    padding: phone ? (portrait ? '10px 8px 10px' : '8px 10px 8px') : portrait ? '22px 30px 18px' : '22px 30px 20px',
   };
 
   return (
@@ -627,6 +690,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
               size={size}
               ring={ringId === w.id}
               jelly={jellyId === w.id}
+              compact={phone}
               onTap={tap}
               onLongPress={longPressFor(w)}
             />
@@ -635,8 +699,9 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           ),
         )}
       </section>
-      <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', justifyContent: 'center', padding: '0 0 14px' }}>
+      <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', justifyContent: 'center', padding: phone ? '0 8px 8px' : '0 0 14px', minWidth: 0 }}>
         <CategoryNav
+          compact={phone}
           categories={CATEGORIES}
           current={categoryId}
           theme={theme}
@@ -654,9 +719,10 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           const { word, rect } = formsFor;
           const t = tonesForWord(word);
           const options = [word.say, ...wordForms(word)];
-          const width = Math.min(stageW - 40, 560);
-          const left = Math.max(20, Math.min(stageW - width - 20, rect.x + rect.w / 2 - width / 2));
-          const above = rect.y > 300;
+          const margin = phone ? 8 : 20;
+          const width = Math.min(stageW - 2 * margin, 560);
+          const left = Math.max(margin, Math.min(stageW - width - margin, rect.x + rect.w / 2 - width / 2));
+          const above = rect.y > (phone ? stageH / 2 : 300);
           return (
             <>
               <div aria-hidden="true" onClick={() => setFormsFor(null)} style={{ position: 'absolute', inset: 0, zIndex: 22 }} />
@@ -689,7 +755,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
                     <X size={22} strokeWidth={2.6} aria-hidden="true" />
                   </RoundIconButton>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${phone ? 140 : 150}px, 1fr))`, gap: phone ? 8 : 10 }}>
                   {options.map((form, i) => (
                     <button
                       key={form + i}
@@ -733,10 +799,10 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
             style={{
               position: 'absolute',
               zIndex: 21,
-              top: portrait ? 214 : 196,
-              left: portrait ? 22 : 190,
-              right: portrait ? 22 : 318,
-              maxHeight: portrait ? 560 : 440,
+              top: phone ? (portrait ? 140 : 72) : portrait ? 214 : 196,
+              left: phone ? 8 : portrait ? 22 : 190,
+              right: phone ? 8 : portrait ? 22 : 318,
+              maxHeight: phone ? stageH - (portrait ? 160 : 84) : portrait ? 560 : 440,
               display: 'flex',
               flexDirection: 'column',
               background: theme.surface,
@@ -820,5 +886,33 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       ))}
       {confetti > 0 && <Confetti key={confetti} width={stageW} height={stageH} />}
     </div>
+  );
+}
+
+/** Card picture sizes on phones: the chosen size, made smaller when the
+ *  screen is short so all 12 places fit without scrolling. */
+const PHONE_CARD = { small: 64, medium: 80, large: 94 } as const;
+
+function phoneCardSize(choice: keyof typeof PHONE_CARD, orientation: 'landscape' | 'portrait', stageH: number) {
+  // Height left for one grid row once the header, core row and category bar are placed.
+  const row = orientation === 'portrait' ? (stageH - 128 - 68 - 70 - 20 - 3 * 8) / 4 : (stageH - 66 - 66 - 72 - 16 - 8) / 2;
+  const circle = Math.round(Math.max(40, Math.min(PHONE_CARD[choice], row - 38)));
+  return { circle, img: Math.round(circle * 0.8) };
+}
+
+/** Lay the iPad background art out on a phone canvas: each piece keeps its
+ *  relative position (by its centre) and is shrunk to the phone's width. */
+function fitDecor(art: string, fromW: number, fromH: number, toW: number, toH: number): string {
+  const sx = toW / fromW;
+  const sy = toH / fromH;
+  const ss = Math.min(sx, sy) * 1.15;
+  return art.replace(
+    /<svg ([^>]*?)width="([\d.]+)" height="([\d.]+)"([^>]*?)left: ([-\d.]+)px; top: ([-\d.]+)px;/g,
+    (_m, a: string, w: string, h: string, b: string, l: string, t: string) => {
+      const W = +w, H = +h, L = +l, T = +t;
+      const nl = (L + W / 2) * sx - (W * ss) / 2;
+      const nt = (T + H / 2) * sy - (H * ss) / 2;
+      return `<svg ${a}width="${(W * ss).toFixed(1)}" height="${(H * ss).toFixed(1)}"${b}left: ${nl.toFixed(1)}px; top: ${nt.toFixed(1)}px;`;
+    },
   );
 }

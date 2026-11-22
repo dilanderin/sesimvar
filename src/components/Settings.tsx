@@ -23,8 +23,8 @@ import { mix } from '../lib/color';
 import { isValidAddress, openMessages, smsUrl } from '../lib/messages';
 import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../lib/pictures';
 import { useRecorder, type Take } from '../lib/recorder';
-import { hasClip, onVoicesChanged, pickVoice, previewVoice, setSpeechRate, setVoicePack, turkishVoices } from '../lib/speech';
-import { VOICE_PACKS } from '../lib/voice';
+import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, setVoicePack, turkishVoices } from '../lib/speech';
+import { VOICE_PACKS, clipUrl } from '../lib/voice';
 import {
   addWord,
   deleteBlob,
@@ -770,7 +770,7 @@ function WordRow({
               {voiceLabel(word.recording.by, word.recording.proper)}
             </span>
           ) : (
-            <span style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>{settings.voicePack && hasClip(word.say) ? `${VOICE_PACKS.find((p) => p.id === settings.voicePack)?.name.split(' ')[0] ?? 'Hazır ses'} okur` : voice ? `${voice.name.split(' ')[0]} okur` : 'Cihaz sesi okur'}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>{clipUrl(settings.voicePack, word.say) ? `${VOICE_PACKS.find((p) => p.id === settings.voicePack)?.name.split(' ')[0] ?? 'Hazır ses'} okur` : voice ? `${voice.name.split(' ')[0]} okur` : 'Cihaz sesi okur'}</span>
           )}
         </button>
         <span style={{ fontSize: 14, fontWeight: 500, color: C.muted, width: 74, textAlign: 'right' }}>{word.hidden ? 'Gizli' : 'Görünüyor'}</span>
@@ -1284,7 +1284,7 @@ function Backup() {
 
 export function Settings({ onClose }: { onClose: () => void }) {
   const { words, settings } = useAppState();
-  const { orientation } = useStage();
+  const { orientation, phone } = useStage();
   const portrait = orientation === 'portrait';
   const people = useMemo(() => {
     const fam = words.filter((w) => w.category === 'kisiler').map((w) => ({ name: w.label, proper: !FAMILY_ROLES.has(w.label) }));
@@ -1306,7 +1306,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', alignItems: 'center', gap: 18, padding: '22px 28px 4px' }}>
+      <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', alignItems: 'center', gap: phone ? 10 : 18, padding: phone ? '10px 10px 4px' : '22px 28px 4px' }}>
         <button
           type="button"
           onClick={onClose}
@@ -1328,8 +1328,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
           <ChevronLeft size={24} strokeWidth={3} aria-hidden="true" /> Bitti
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 600, lineHeight: 1.1 }}>Ayarlar</h1>
-          <div style={{ fontSize: 14, fontWeight: 500, color: C.muted }}>
+          <h1 style={{ margin: 0, fontSize: phone ? 24 : 30, fontWeight: 600, lineHeight: 1.1 }}>Ayarlar</h1>
+          <div style={{ fontSize: phone ? 12 : 14, fontWeight: 500, color: C.muted, lineHeight: 1.25 }}>
             Aile için · ana ekrandaki çarka {settings.locked ? '2 saniye basılı tutarak' : 'dokunarak'} açılır
           </div>
         </div>
@@ -1358,6 +1358,47 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
+      {phone ? (
+        // Phones: the cards in one scrolling page (two columns when sideways).
+        <div
+          className="kb-noscrollbar"
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            display: 'grid',
+            gridTemplateColumns: portrait ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) minmax(0, 1fr)',
+            alignItems: 'start',
+            gap: 12,
+            padding: '10px 10px 24px',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+            <AddWord people={people} />
+            {portrait && (
+              <div style={{ height: 520, display: 'flex', flexDirection: 'column' }}>
+                <WordList people={people} />
+              </div>
+            )}
+            <CoreRowEditor />
+            <Appearance />
+            {portrait && <VoiceAndParrot />}
+            <SendSetup />
+            {portrait && <Backup />}
+          </div>
+          {!portrait && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+              <div style={{ height: 520, display: 'flex', flexDirection: 'column' }}>
+                <WordList people={people} />
+              </div>
+              <VoiceAndParrot />
+              <Backup />
+            </div>
+          )}
+        </div>
+      ) : (
       <div
         style={{
           position: 'relative',
@@ -1400,7 +1441,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
-      <div style={{ flex: 'none', padding: '0 28px 14px', fontSize: 13, fontWeight: 500, color: C.muted }}>
+      )}
+      <div style={{ flex: 'none', padding: phone ? '0 10px 8px' : '0 28px 14px', fontSize: phone ? 11 : 13, fontWeight: 500, color: C.muted }}>
         Piktogramlar: Sergio Palao, ARASAAC (arasaac.org), CC BY-NC-SA · Reklam yok, hesap yok; her şey bu cihazda kalır.
       </div>
     </div>
