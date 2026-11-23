@@ -1212,6 +1212,7 @@ function SendSetup() {
 // ------------------------------------------------------------------ backup
 
 function Backup() {
+  const { settings } = useAppState();
   const [busy, setBusy] = useState<'save' | 'restore' | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [undoable, setUndoable] = useState(canUndoReset);
@@ -1306,6 +1307,16 @@ function Backup() {
           {message.text}
         </div>
       )}
+      <div style={{ borderTop: `2px solid ${C.soft}`, paddingTop: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 600 }}>Kullanım sayısını paylaş</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
+            Sesim Var’ın kaç cihazda ve ne kadar kullanıldığını sayar: rastgele bir cihaz numarası, gün, dokunma ve cümle sayısı. İnternet yokken de sayar, sonra
+            gönderir. Söylenen kelimeler, cümleler, isimler ve kayıtlar asla gönderilmez.
+          </div>
+        </div>
+        <Toggle on={settings.shareUsage !== false} onChange={(shareUsage) => updateSettings({ shareUsage })} label="Kullanım sayısını paylaş" />
+      </div>
       <div style={{ borderTop: `2px solid ${C.soft}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {!confirmReset ? (
           <div style={{ display: 'flex', gap: 10 }}>
@@ -1525,7 +1536,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       </div>
       )}
       <div style={{ flex: 'none', padding: phone ? '0 10px 8px' : '0 28px 14px', fontSize: phone ? 11 : 13, fontWeight: 500, color: C.muted }}>
-        Piktogramlar: Sergio Palao, ARASAAC (arasaac.org), CC BY-NC-SA · Reklam yok, hesap yok; her şey bu cihazda kalır.
+        Piktogramlar: Sergio Palao, ARASAAC (arasaac.org), CC BY-NC-SA · Reklam yok, hesap yok; kelimeler, cümleler ve kayıtlar bu cihazda kalır.
       </div>
     </div>
   );

@@ -29,6 +29,8 @@ export interface Settings {
   /** A second page of 12 places per category, reached by scrolling down (on by default since
    *  2026-11-23, the owner's choice). The first page never changes. */
   secondPage: boolean;
+  /** Send anonymous usage counts (no words or sentences). On by default; the owner asked for it. */
+  shareUsage: boolean;
 }
 
 export type SpeechRate = 'slow' | 'normal' | 'fast';
@@ -73,6 +75,7 @@ export function initialState(): AppState {
       sendTo: { name: '', address: '' },
       wordForms: false,
       secondPage: true,
+      shareUsage: true,
     },
     migrations: MIGRATIONS.map((m) => m.id),
   };

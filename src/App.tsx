@@ -3,6 +3,7 @@ import { Board } from './components/Board';
 import { Settings } from './components/Settings';
 import { Stage } from './components/Stage';
 import { setSpeechRate, setVoicePack } from './lib/speech';
+import { setUsageSharing } from './lib/usage';
 import { useAppState, type ThemeChoice } from './lib/store';
 import { DAY, NIGHT, type Theme } from './lib/theme';
 
@@ -29,6 +30,7 @@ export default function App() {
   const theme = useTheme(settings.theme);
   useEffect(() => setSpeechRate(settings.speechRate), [settings.speechRate]);
   useEffect(() => setVoicePack(settings.voicePack ?? null), [settings.voicePack]);
+  useEffect(() => setUsageSharing(settings.shareUsage !== false), [settings.shareUsage]);
   const [screen, setScreen] = useState<'board' | 'settings'>(() => (location.hash === '#ayarlar' ? 'settings' : 'board'));
 
   useEffect(() => {

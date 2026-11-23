@@ -32,5 +32,6 @@ export default defineConfig({
       },
     }),
   ],
+  define: { __APP_VERSION__: JSON.stringify(new Date().toISOString().slice(0, 10)) },
   test: { environment: 'node' },
 });

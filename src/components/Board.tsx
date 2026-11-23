@@ -6,6 +6,7 @@ import { preloadClips, saySentence, sayWord, stopSpeaking, unlockAudio } from '.
 import { wordForms } from '../lib/forms';
 import { isValidAddress, openMessages, sentenceText, smsUrl } from '../lib/messages';
 import { clearHistory, rememberSentence, useAppState } from '../lib/store';
+import { countSend, countSentence, countTap } from '../lib/usage';
 import { tones, type Theme, type Tones } from '../lib/theme';
 import {
   ActionButton,
@@ -202,6 +203,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       // Accidental-tap protection: ignore another card tap that comes too soon.
       if (settings.tapGuardMs && now - lastTapAt.current < settings.tapGuardMs) return;
       lastTapAt.current = now;
+      countTap();
       lastActivity.current = now;
       stopReading();
       const t = tonesForWord(word);
@@ -274,6 +276,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       return;
     }
     rememberSentence(list.map(historyKey));
+    countSentence();
     setReadingIdx(0);
     if (motion) showPose('talk');
     const finished = await saySentence(
@@ -325,6 +328,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     const list = chipsRef.current.filter((c) => !c.pending);
     if (!list.length || launching) return;
     rememberSentence(list.map(historyKey));
+    countSend();
     stopSpeaking();
     setReadingIdx(null);
     const to = settings.sendTo?.address ?? '';

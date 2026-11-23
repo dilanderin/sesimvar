@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-23 (evening)
+- **Anonymous usage counts**, so we can see how many devices use Sesim Var and how much. Each device sends a random number, the day, and how many words were tapped and sentences read or sent, plus whether it is an iPad, iPhone or Mac. It counts offline too and sends when there is internet. **The words and sentences themselves are never sent.** Ayarlar → Yedek → **Kullanım sayısını paylaş** turns it off.
+
 ## 2026-11-23 (afternoon)
 - **The second page is now a scroll down, and it is on.** Swipe the board up to see a category's 2nd page; it stops neatly at the page. Tapping the chosen category again still turns the page too. The dots on the category button and a small arrow under the board show where you are. The first page looks exactly as before, and a category with an empty 2nd page does not scroll at all. It can be turned off in Ayarlar → Görünüm → İkinci sayfa.
 - **Ayarlar → Yedek → İlk haline döndür:** puts the board back the way the app first started (built-in words and places, all settings). It asks first, and right after there is a **Geri al** button that brings everything back exactly as it was.
