@@ -486,9 +486,14 @@ export function CategoryNav({
   toneFor,
   onSelect,
   compact,
+  pages = 1,
+  page = 0,
 }: {
   categories: Category[];
   current: string;
+  /** Pages of the chosen category (2 with the second page); tapping it again turns the page. */
+  pages?: number;
+  page?: number;
   theme: Theme;
   orientation: Orientation;
   toneFor: (c: Category) => Tones;
@@ -529,6 +534,7 @@ export function CategoryNav({
               key={c.id}
               type="button"
               aria-pressed="true"
+              aria-label={pages > 1 ? `${c.name}, sayfa ${page + 1} / ${pages}. Diğer sayfa için dokun` : undefined}
               onClick={() => onSelect(c)}
               style={{
                 ...resetButton,
@@ -562,8 +568,26 @@ export function CategoryNav({
               >
                 <img src={c.icon} alt="" draggable={false} style={{ width: compact ? 32 : 46, height: compact ? 32 : 46, objectFit: 'contain', display: 'block' }} />
               </div>
-              <span style={{ fontSize: compact ? 15 : portrait ? 17 : 19, fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', lineHeight: 1 }}>
-                {c.name}
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: compact ? 4 : 6 }}>
+                <span style={{ fontSize: compact ? 15 : portrait ? 17 : 19, fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', lineHeight: 1 }}>
+                  {c.name}
+                </span>
+                {pages > 1 && (
+                  <span aria-hidden="true" style={{ display: 'flex', gap: compact ? 4 : 5 }}>
+                    {Array.from({ length: pages }, (_, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          width: i === page ? (compact ? 14 : 18) : compact ? 7 : 9,
+                          height: compact ? 7 : 9,
+                          borderRadius: 5,
+                          background: i === page ? theme.text : t.navActiveInset,
+                          transition: 'width 150ms ease-out',
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
               </span>
             </button>
           );

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-23
+- **A second page for each category** (Ayarlar → Görünüm → **İkinci sayfa**, off until you turn it on). Each category gets 12 more places. Temel, Eylem, Günlük, Vücut and Eşyalar were full, so now words like İç, Ye, Uyu, Büyük, Küçük can go into their own category.
+  - On the board, **tap the chosen category again** to see its 2nd page; tap once more to go back. Two small dots on the category button show which page is open.
+  - **The first page does not change at all**, and a category always opens on its first page. A category whose 2nd page is still empty works exactly as before.
+  - Kelime ekle puts a new word on the 2nd page only when the first page is full. In the Kelimeler list, 2nd-page words appear under a "2. sayfa" heading.
+  - Turning the option off keeps those words; they just stop being shown.
+
 ## 2026-11-22 (more word forms)
 - **Kelime çekimleri: "o yaptı" too.** Every action now also has the third-person past: **geldi, gitti, aldı, verdi, getirdi, baktı, oynadı, izledi, aradı, bekledi, yaptı, gönderdi.**
 - **Action words added from Hazır resimler have forms too:** İç (içiyorum, içtim, içti, içsin, içme), Ye, Otur, Kalk, Dur, Uyu, Sarıl, Aç, Kapat.

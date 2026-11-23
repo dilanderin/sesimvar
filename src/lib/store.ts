@@ -26,6 +26,8 @@ export interface Settings {
   sendTo: { name: string; address: string };
   /** Hold a card to choose a word form (kolum, suya, geliyorum…). Off by default. */
   wordForms: boolean;
+  /** A second page of 12 places per category. Off by default; the first page never changes. */
+  secondPage: boolean;
 }
 
 export type SpeechRate = 'slow' | 'normal' | 'fast';
@@ -69,6 +71,7 @@ export function initialState(): AppState {
       tapGuardMs: 0,
       sendTo: { name: '', address: '' },
       wordForms: false,
+      secondPage: false,
     },
     migrations: MIGRATIONS.map((m) => m.id),
   };

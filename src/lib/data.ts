@@ -26,7 +26,10 @@ export const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]
 
 /** Each category board has a fixed number of places. A hidden word keeps its
  *  place empty, so the other cards never move. */
+/** Places on a category's first page. */
 export const SLOTS_PER_CATEGORY = 12;
+/** Places with the optional second page (Ayarlar → Görünüm → İkinci sayfa). */
+export const MAX_SLOTS_PER_CATEGORY = 24;
 
 export type Picture =
   | { kind: 'builtin'; src: string }
@@ -288,9 +291,9 @@ export function newWordId(label: string): string {
   return `w-${slug(label) || 'kelime'}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** First free place on a category board, or -1 when all places are taken. */
-export function freeSlot(words: Word[], category: CategoryId): number {
+/** First free place on a category board (the first page, or both pages), or -1 when all are taken. */
+export function freeSlot(words: Word[], category: CategoryId, places: number = SLOTS_PER_CATEGORY): number {
   const used = new Set(words.filter((w) => w.category === category).map((w) => w.slot));
-  for (let i = 0; i < SLOTS_PER_CATEGORY; i++) if (!used.has(i)) return i;
+  for (let i = 0; i < places; i++) if (!used.has(i)) return i;
   return -1;
 }

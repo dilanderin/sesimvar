@@ -132,11 +132,19 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
 
   const category = CATEGORY_BY_ID[categoryId];
   const catTones = toneFor(category);
+  // Optional second page: it exists for a category only when it has a visible word.
+  const [page, setPage] = useState(0);
+  const pages = useMemo(
+    () => (settings.secondPage && words.some((w) => w.category === categoryId && !w.hidden && w.slot >= SLOTS_PER_CATEGORY && w.slot < 2 * SLOTS_PER_CATEGORY) ? 2 : 1),
+    [settings.secondPage, words, categoryId],
+  );
+  const shownPage = page < pages ? page : 0;
   const slots = useMemo(() => {
+    const first = shownPage * SLOTS_PER_CATEGORY;
     const arr: (Word | null)[] = Array.from({ length: SLOTS_PER_CATEGORY }, () => null);
-    for (const w of words) if (w.category === categoryId && !w.hidden && w.slot < SLOTS_PER_CATEGORY) arr[w.slot] = w;
+    for (const w of words) if (w.category === categoryId && !w.hidden && w.slot >= first && w.slot < first + SLOTS_PER_CATEGORY) arr[w.slot - first] = w;
     return arr;
-  }, [words, categoryId]);
+  }, [words, categoryId, shownPage]);
   const coreWords = useMemo(
     () => settings.core.map((id) => words.find((w) => w.id === id)).filter((w): w is Word => !!w),
     [settings.core, words],
@@ -686,7 +694,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: decor }} />
       {header}
       {coreRow}
-      <section aria-label={`${category.name} kelimeleri`} style={gridStyle}>
+      <section aria-label={`${category.name} kelimeleri${pages > 1 ? `, sayfa ${shownPage + 1}` : ''}`} style={gridStyle}>
         {slots.map((w, i) =>
           w ? (
             <WordCard
@@ -711,12 +719,21 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
           compact={phone}
           categories={CATEGORIES}
           current={categoryId}
+          pages={pages}
+          page={shownPage}
           theme={theme}
           orientation={orientation}
           toneFor={toneFor}
           onSelect={(c) => {
             lastActivity.current = Date.now();
+            if (c.id === categoryId) {
+              // The chosen category again: its other page.
+              if (pages > 1) setPage(shownPage === 0 ? 1 : 0);
+              return;
+            }
+            // A category always opens on its first page.
             setCategoryId(c.id);
+            setPage(0);
           }}
         />
       </div>

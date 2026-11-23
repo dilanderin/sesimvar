@@ -17,7 +17,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { CATEGORIES, CATEGORY_BY_ID, LIBRARY, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
+import { CATEGORIES, CATEGORY_BY_ID, LIBRARY, MAX_SLOTS_PER_CATEGORY, SLOTS_PER_CATEGORY, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
 import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, summarize } from '../lib/backup';
 import { mix } from '../lib/color';
 import { isValidAddress, openMessages, smsUrl } from '../lib/messages';
@@ -347,11 +347,12 @@ function Recorder({
 type PicMode = 'piktogram' | 'foto' | 'yazi';
 
 function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
-  const { words } = useAppState();
+  const { words, settings } = useAppState();
+  const places = settings.secondPage ? MAX_SLOTS_PER_CATEGORY : SLOTS_PER_CATEGORY;
   const [label, setLabel] = useState('');
   const [mode, setMode] = useState<PicMode>('piktogram');
   const [category, setCategory] = useState<CategoryId>(
-    () => (['esyalar', 'kisiler', 'duygu', 'ekran', 'yerler', ...CATEGORIES.map((c) => c.id)] as CategoryId[]).find((id) => freeSlot(words, id) >= 0) ?? 'esyalar',
+    () => (['esyalar', 'kisiler', 'duygu', 'ekran', 'yerler', ...CATEGORIES.map((c) => c.id)] as CategoryId[]).find((id) => freeSlot(words, id, places) >= 0) ?? 'esyalar',
   );
   const [results, setResults] = useState<PictoResult[]>([]);
   const [searchState, setSearchState] = useState<'idle' | 'loading' | 'done' | 'offline'>('idle');
@@ -375,7 +376,7 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
     const lib: PictoResult[] = searchLibrary(label).map((item, i) => ({ id: -(i + 1), url: item.src, library: item }));
     setResults(lib);
     setChosen(lib[0] ?? null);
-    if (lib[0] && freeSlot(words, lib[0].library!.category) >= 0) setCategory(lib[0].library!.category);
+    if (lib[0] && freeSlot(words, lib[0].library!.category, places) >= 0) setCategory(lib[0].library!.category);
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       setSearchState('loading');
@@ -397,8 +398,8 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
   const libItem = mode === 'piktogram' ? chosen?.library : undefined;
   const typed = label.trim();
   const finalLabel = libItem && lowerTr(libItem.label).startsWith(lowerTr(typed)) ? libItem.label : typed;
-  const libCategoryFull = !!libItem && freeSlot(words, libItem.category) < 0;
-  const slot = freeSlot(words, category);
+  const libCategoryFull = !!libItem && freeSlot(words, libItem.category, places) < 0;
+  const slot = freeSlot(words, category, places);
   const full = slot < 0;
   const catName = CATEGORY_BY_ID[category].name;
   const cleanLabel = finalLabel;
@@ -454,7 +455,7 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
         picture,
         recording,
       });
-      setMessage(`“${cleanLabel}” ${catName} tahtasına eklendi.`);
+      setMessage(`“${cleanLabel}” ${catName} tahtasına eklendi${slot >= SLOTS_PER_CATEGORY ? ' (2. sayfa)' : ''}.`);
       setLabel('');
       setChosen(null);
       setResults([]);
@@ -555,7 +556,7 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
         <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
           {mode === 'piktogram' &&
             (results.some((r) => r.library) && (searchState !== 'done' || results.every((r) => r.library))
-              ? `Sesim Var’ın hazır resmi bulundu.${libCategoryFull && libItem ? ` ${CATEGORY_BY_ID[libItem.category].name} dolu; başka bir kategori seçin.` : ''}${searchState === 'offline' ? ' (İnternet yok; ARASAAC aranamadı.)' : ''}`
+              ? `Sesim Var’ın hazır resmi bulundu.${libCategoryFull && libItem ? ` ${CATEGORY_BY_ID[libItem.category].name} dolu; başka bir kategori seçin${settings.secondPage ? '' : ' ya da Görünüm → İkinci sayfa’yı açın'}.` : ''}${searchState === 'offline' ? ' (İnternet yok; ARASAAC aranamadı.)' : ''}`
               : searchState === 'idle'
               ? 'Kelimeyi yazın; ARASAAC’ta uygun resimler aranır.'
               : searchState === 'loading'
@@ -590,7 +591,7 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
               aria-label={`Resim ${r.id}`}
               onClick={() => {
                 setChosen(r);
-                if (r.library && freeSlot(words, r.library.category) >= 0) setCategory(r.library.category);
+                if (r.library && freeSlot(words, r.library.category, places) >= 0) setCategory(r.library.category);
               }}
               style={{
                 ...btn,
@@ -652,7 +653,14 @@ function AddWord({ people }: { people: { name: string; proper: boolean }[] }) {
         </div>
       </div>
       <Recorder people={people} by={by} setBy={setBy} take={rec.take} rec={rec} />
-      {full && cleanLabel && <div style={{ fontSize: 14, color: '#B3261E', fontWeight: 500 }}>{catName} tahtası dolu. Yer açmak için Kelimeler listesinden gizli bir kelimeyi silin.</div>}
+      {full && cleanLabel && (
+        <div style={{ fontSize: 14, color: '#B3261E', fontWeight: 500 }}>
+          {catName} tahtası dolu.{' '}
+          {settings.secondPage
+            ? 'Yer açmak için Kelimeler listesinden gizli bir kelimeyi silin.'
+            : 'Görünüm → İkinci sayfa açılırsa 12 yer daha olur; ya da Kelimeler listesinden gizli bir kelimeyi silin.'}
+        </div>
+      )}
       {message && (
         <div role="status" style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>
           {message}
@@ -816,7 +824,7 @@ function WordRow({
 }
 
 function WordList({ people }: { people: { name: string; proper: boolean }[] }) {
-  const { words } = useAppState();
+  const { words, settings } = useAppState();
   const [cat, setCat] = useState<CategoryId>('kisiler');
   const list = useMemo(() => words.filter((w) => w.category === cat).sort((a, b) => a.slot - b.slot), [words, cat]);
   const [drag, setDrag] = useState<{ id: string; over: string | null } | null>(null);
@@ -854,8 +862,15 @@ function WordList({ people }: { people: { name: string; proper: boolean }[] }) {
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', margin: '0 -6px', padding: '0 6px' }}>
         {list.length === 0 && <p style={{ color: C.muted, fontSize: 15 }}>Bu kategoride henüz kelime yok. Soldan ekleyebilirsiniz.</p>}
-        {list.map((w) => (
-          <WordRow key={w.id} word={w} people={people} dragging={drag?.id === w.id} over={!!drag && drag.over === w.id && drag.id !== w.id} onGrip={onGrip(w.id)} />
+        {list.map((w, i) => (
+          <div key={w.id}>
+            {w.slot >= SLOTS_PER_CATEGORY && (i === 0 || list[i - 1].slot < SLOTS_PER_CATEGORY) && (
+              <div style={{ padding: '12px 4px 4px', fontSize: 14, fontWeight: 700, color: C.muted }}>
+                2. sayfa{!settings.secondPage && ' · İkinci sayfa kapalı, bu kelimeler tahtada görünmez'}
+              </div>
+            )}
+            <WordRow word={w} people={people} dragging={drag?.id === w.id} over={!!drag && drag.over === w.id && drag.id !== w.id} onGrip={onGrip(w.id)} />
+          </div>
         ))}
       </div>
     </Card>
@@ -984,6 +999,15 @@ function Appearance() {
           <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>Karta basılı tutunca: kolum, suya, annem, geliyorum, gelme…</div>
         </div>
         <Toggle on={!!settings.wordForms} onChange={(wordForms) => updateSettings({ wordForms })} label="Kelime çekimleri" />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 600 }}>İkinci sayfa</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
+            Her kategoriye 12 yer daha. Tahtada seçili kategoriye bir daha dokununca 2. sayfa açılır. İlk sayfa hiç değişmez.
+          </div>
+        </div>
+        <Toggle on={!!settings.secondPage} onChange={(secondPage) => updateSettings({ secondPage })} label="İkinci sayfa" />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
