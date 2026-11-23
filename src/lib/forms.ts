@@ -27,6 +27,7 @@ const FORMS: Record<string, string[]> = {
   'kisiler-baba': ['babam', 'babama', 'babamı', 'babamla'],
   'kisiler-amca': ['amcam', 'amcama', 'amcamı', 'amcamla'],
   'kisiler-hala': ['halam', 'halama', 'halamı', 'halamla'],
+  'kisiler-teyze': ['teyzem', 'teyzeme', 'teyzemi', 'teyzemle'],
   'kisiler-guler-teyze': ["Güler Teyze'ye", "Güler Teyze'yi", "Güler Teyze'yle", "Güler Teyze'nin"],
   'kisiler-dayi': ['dayım', 'dayıma', 'dayımı', 'dayımla'],
   'kisiler-doktor': ['doktora', 'doktoru', 'doktorda', 'doktordan'],
@@ -85,12 +86,12 @@ const SAY_FORMS: Record<string, string[]> = {
   kapat: ['kapatıyorum', 'kapattım', 'kapattı', 'kapatsın', 'kapatma'],
 };
 
-/** Boards saved before 2026-11-22 keep Güler Teyze under the old "Teyze" id. */
-const SAME_AS: Record<string, string> = { 'kisiler-teyze': 'kisiler-guler-teyze' };
 
 export function wordForms(word: Pick<Word, 'id'> & { label?: string; say?: string }): string[] {
-  if (word.id === 'kisiler-teyze' && word.label !== 'Güler Teyze') return [];
-  const byId = FORMS[SAME_AS[word.id] ?? word.id];
+  // Zeki's boards saved before 2026-11-23 keep Güler Teyze under the "Teyze" id.
+  const id = word.id === 'kisiler-teyze' && word.label === 'Güler Teyze' ? 'kisiler-guler-teyze' : word.id;
+  if (id === 'kisiler-teyze' && word.label && word.label !== 'Teyze') return [];
+  const byId = FORMS[id];
   if (byId) return byId;
   return word.say ? (SAY_FORMS[lowerTr(word.say.trim())] ?? []) : [];
 }

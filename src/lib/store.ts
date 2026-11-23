@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { del, get, set } from 'idb-keyval';
-import { freeSlot, seedWords, type Word } from './data';
+import { freeSlot, seedWords, type Profile, type Word } from './data';
+import { currentProfile, saveProfile } from './profile';
 import { DEFAULT_VOICE_PACK } from './voice';
 
 export type CardSize = 'small' | 'medium' | 'large';
@@ -55,8 +56,8 @@ function prefersReducedMotion(): boolean {
   return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function initialState(): AppState {
-  const words = seedWords();
+export function initialState(profile: Profile = activeProfile): AppState {
+  const words = seedWords(profile);
   return {
     version: 1,
     words,
@@ -77,15 +78,15 @@ export function initialState(): AppState {
       secondPage: true,
       shareUsage: true,
     },
-    migrations: MIGRATIONS.map((m) => m.id),
+    migrations: MIGRATIONS.filter((m) => appliesTo(m, profile)).map((m) => m.id),
   };
 }
 
 /** Built-in words follow the app's current bundled pictures (so a new picture
  *  set reaches boards saved earlier), but only while they still use a bundled
  *  picture: a photo or pictogram the family chose is kept. */
-export function refreshSeedPictures(words: Word[]): Word[] {
-  const seeds = new Map(seedWords().map((w) => [w.id, w.picture]));
+export function refreshSeedPictures(words: Word[], profile: Profile = activeProfile): Word[] {
+  const seeds = new Map(seedWords(profile).map((w) => [w.id, w.picture]));
   return words.map((w) => {
     const seed = seeds.get(w.id);
     if (!seed || w.picture.kind !== 'builtin' || seed.kind !== 'builtin' || seed.src === w.picture.src) return w;
@@ -95,11 +96,11 @@ export function refreshSeedPictures(words: Word[]): Word[] {
 
 /** Built-in words added in a later version appear on saved boards too, but
  *  only in a place that is still free: nothing the family arranged moves. */
-export function addMissingSeeds(words: Word[]): Word[] {
+export function addMissingSeeds(words: Word[], profile: Profile = activeProfile): Word[] {
   const ids = new Set(words.map((w) => w.id));
   const taken = new Set(words.map((w) => `${w.category}:${w.slot}`));
   const added: Word[] = [];
-  for (const seed of seedWords()) {
+  for (const seed of seedWords(profile)) {
     if (ids.has(seed.id) || seed.category === 'core') continue;
     const key = `${seed.category}:${seed.slot}`;
     if (taken.has(key)) continue;
@@ -112,12 +113,34 @@ export function addMissingSeeds(words: Word[]): Word[] {
 /** One-time changes the family asked for, applied once to boards saved
  *  earlier. Each one only adds or shows words; nothing moves or disappears.
  *  A board remembers which ran, so a word hidden again later stays hidden. */
-export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[]; settings?: (s: Settings) => Settings }[] = [
+interface Migration {
+  id: string;
+  /** Only for this board; otherwise for every board. */
+  only?: Profile;
+  run: (words: Word[]) => Word[];
+  settings?: (s: Settings) => Settings;
+}
+
+const appliesTo = (m: Migration, p: Profile) => !m.only || m.only === p;
+
+/** Family words that belong only on Zeki's board (with their built-in label). */
+const FAMILY_WORDS: Record<string, string> = {
+  'kisiler-dilan': 'Dilan',
+  'kisiler-baris': 'Barış',
+  'kisiler-guler-teyze': 'Güler Teyze',
+  'yerler-elazig': 'Elazığ',
+};
+
+/** A built-in word the family never changed: no recording or photo, same name. */
+const untouched = (w: Word, label: string) => w.label === label && !w.recording && w.picture.kind === 'builtin';
+
+export const MIGRATIONS: Migration[] = [
   {
     // "Add Kişiler: Barış, Güler Teyze, Dayı" (2026-11-22).
     id: 'kisiler-baris-guler-dayi',
+    only: 'zeki',
     run: (words) => {
-      const seeds = seedWords();
+      const seeds = seedWords('zeki');
       let next = [...words];
       const show = (label: string): boolean => {
         const i = next.findIndex((w) => w.category === 'kisiler' && w.label === label);
@@ -134,12 +157,49 @@ export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[]; settings?
       if (!show('Dayı')) add('kisiler-dayi');
       if (!show('Barış')) add('kisiler-baris');
       if (!show('Güler Teyze')) {
-        // The hidden, never-used built-in "Teyze" becomes Güler Teyze in its own place.
-        const i = next.findIndex(
-          (w) => w.id === 'kisiler-teyze' && w.hidden && w.label === 'Teyze' && !w.recording && w.picture.kind === 'builtin',
-        );
+        // The built-in "Teyze" the family never changed becomes Güler Teyze in its own place.
+        const i = next.findIndex((w) => w.id === 'kisiler-teyze' && untouched(w, 'Teyze'));
         if (i >= 0) next[i] = { ...next[i], label: 'Güler Teyze', say: 'Güler Teyze', hidden: false };
         else add('kisiler-guler-teyze');
+      }
+      return next;
+    },
+  },
+  {
+    // Others started using Sesim Var: the family's own names and places stay on
+    // Zeki's board only (2026-11-23). Words the family changed are kept; Güler
+    // Teyze goes back to the general "Teyze". Choosing Zeki's board brings them
+    // back in the same places (next migration).
+    id: 'genel-without-family-names',
+    only: 'genel',
+    run: (words) =>
+      words.flatMap((w) => {
+        const label = FAMILY_WORDS[w.id];
+        if (label && untouched(w, label)) return [];
+        if (w.id === 'kisiler-teyze' && untouched(w, 'Güler Teyze')) return [{ ...w, label: 'Teyze', say: 'Teyze' }];
+        return [w];
+      }),
+  },
+  {
+    // Zeki's board has the family's people and places (2026-11-23).
+    id: 'zeki-family-words',
+    only: 'zeki',
+    run: (words) => {
+      const seeds = seedWords('zeki');
+      let next = [...words];
+      const i = next.findIndex((w) => w.id === 'kisiler-teyze' && untouched(w, 'Teyze'));
+      if (i >= 0 && !next.some((w) => w.label === 'Güler Teyze')) next[i] = { ...next[i], label: 'Güler Teyze', say: 'Güler Teyze', hidden: false };
+      for (const [id, label] of Object.entries(FAMILY_WORDS)) {
+        const seed = seeds.find((w) => w.id === id)!;
+        const j = next.findIndex((w) => w.category === seed.category && w.label === label);
+        if (j >= 0) {
+          if (next[j].hidden) next[j] = { ...next[j], hidden: false };
+          continue;
+        }
+        const category = seed.category as Exclude<Word['category'], 'core'>;
+        const taken = next.some((w) => w.category === category && w.slot === seed.slot);
+        const slot = taken ? freeSlot(next, category) : seed.slot;
+        if (slot >= 0) next = [...next, { ...seed, slot }];
       }
       return next;
     },
@@ -153,25 +213,43 @@ export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[]; settings?
 ];
 
 /** Bring a saved or restored board up to date with this version of the app. */
-export function upgradeState(saved: AppState): AppState {
-  const fresh = initialState();
+export function upgradeState(saved: AppState, profile: Profile = activeProfile): AppState {
+  const fresh = initialState(profile);
   const done = new Set(saved.migrations ?? []);
-  let words = refreshSeedPictures(saved.words);
+  let words = refreshSeedPictures(saved.words, profile);
   let settings: Settings = { ...fresh.settings, ...saved.settings };
   for (const m of MIGRATIONS) {
-    if (done.has(m.id)) continue;
+    if (!appliesTo(m, profile) || done.has(m.id)) continue;
     words = m.run(words);
     if (m.settings) settings = m.settings(settings);
+    done.add(m.id);
   }
-  words = addMissingSeeds(words);
+  words = addMissingSeeds(words, profile);
   return {
     ...fresh,
     ...saved,
     version: 1,
     words,
     settings,
-    migrations: MIGRATIONS.map((m) => m.id),
+    migrations: [...done],
   };
+}
+
+let activeProfile: Profile = currentProfile();
+
+/** The board this device shows: "genel" or Zeki's. */
+export function getProfile(): Profile {
+  return activeProfile;
+}
+
+/** Switch this device to another board (Ayarlar → Aile kodu). Nothing the
+ *  family changed is lost; built-in family words appear or go away. */
+export function setProfile(p: Profile) {
+  if (p === activeProfile) return;
+  activeProfile = p;
+  saveProfile(p);
+  state = upgradeState(state, p);
+  emit();
 }
 
 function load(): AppState {

@@ -6,7 +6,8 @@ import { DEFAULT_VOICE_PACK, clipFile, clipKey, clipUrl } from '../voice';
 
 describe('prerecorded voice', () => {
   const texts = [
-    ...seedWords().map((w) => w.say),
+    ...seedWords('genel').map((w) => w.say),
+    ...seedWords('zeki').map((w) => w.say),
     ...LIBRARY.map((i) => defaultSay(i.label, i.category)),
     ...FORM_WORD_IDS.flatMap((id) => wordForms({ id })),
     ...SAY_FORM_TEXTS,

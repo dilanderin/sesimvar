@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-23 (night)
+- **Zeki's own board: sesimvar.d3asoft.com/zeki.** Other people have started using Sesim Var, so the family's own names and places (**Dilan, Barış, Güler Teyze, Elazığ**) now appear only on Zeki's board. Everyone else gets a general board, with Anne, Baba, Amca, Hala, Teyze and Dayı.
+- On a device that already had these words, they go away from the general board only if nobody changed them (a word with a recording or photo stays). Opening Zeki's board brings them back **in exactly the same places**.
+- **Ayarlar → Aile tahtası:** type the family code **zeki** to switch an iPad to Zeki's board, also inside the app on the Home Screen. The device remembers it.
+
 ## 2026-11-23 (evening)
 - **Anonymous usage counts**, so we can see how many devices use Sesim Var and how much. Each device sends a random number, the day, and how many words were tapped and sentences read or sent, plus whether it is an iPad, iPhone or Mac. It counts offline too and sends when there is internet. **The words and sentences themselves are never sent.** Ayarlar → Yedek → **Kullanım sayısını paylaş** turns it off.
 

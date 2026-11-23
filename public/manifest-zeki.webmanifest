@@ -1,0 +1,14 @@
+{
+  "name": "Sesim Var",
+  "short_name": "Sesim Var",
+  "description": "Resimlerle konuşma tahtası",
+  "lang": "tr",
+  "id": "/zeki",
+  "start_url": "/zeki",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#FFE9DA",
+  "theme_color": "#FFE9DA",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

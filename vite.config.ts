@@ -14,6 +14,8 @@ export default defineConfig({
         short_name: 'Sesim Var',
         description: 'Resimlerle konuşma tahtası',
         lang: 'tr',
+        start_url: '/',
+        scope: '/',
         display: 'fullscreen',
         orientation: 'any',
         background_color: '#FFE9DA',

@@ -26,9 +26,12 @@ import { fetchBlob, prepareImage, searchArasaac, type ArasaacResult } from '../l
 import { useRecorder, type Take } from '../lib/recorder';
 import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, setVoicePack, turkishVoices } from '../lib/speech';
 import { VOICE_PACKS, clipUrl } from '../lib/voice';
+import { profileForCode } from '../lib/profile';
 import {
   addWord,
   canUndoReset,
+  getProfile,
+  setProfile,
   deleteBlob,
   resetToOriginal,
   undoReset,
@@ -1373,6 +1376,79 @@ function Backup() {
   );
 }
 
+// ------------------------------------------------------------ family board
+
+/** Zeki's board has the family's own names and places; everyone else gets
+ *  the general board. Opening sesimvar.d3asoft.com/zeki or typing the code
+ *  here switches this device. */
+function FamilyBoard() {
+  useAppState(); // re-render when the board changes
+  const profile = getProfile();
+  const [code, setCode] = useState('');
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
+  const open = () => {
+    const p = profileForCode(code);
+    if (!p) {
+      setMessage({ text: 'Bu kod bulunamadı.', error: true });
+      return;
+    }
+    setProfile(p);
+    setCode('');
+    setMessage({ text: 'Zeki’nin tahtası açıldı: aile isimleri ve yerleri yerlerinde.' });
+  };
+  return (
+    <Card title="Aile tahtası">
+      {profile === 'zeki' ? (
+        <>
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.text, lineHeight: 1.4 }}>
+            Bu cihazda <b>Zeki’nin tahtası</b> açık: Dilan, Barış, Güler Teyze, Elazığ gibi aile kelimeleri görünür.
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>Başka cihazlarda açmak için: sesimvar.d3asoft.com/zeki</div>
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
+            Herkes genel tahtayı görür. Ailenin kendi tahtası için aile kodunu yazın (ya da sesimvar.d3asoft.com/kod adresini açın).
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <label style={{ flex: 1, minWidth: 0 }}>
+              <span className="kb-sr">Aile kodu</span>
+              <input
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value);
+                  setMessage(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') open();
+                }}
+                placeholder="Aile kodu"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                style={{ width: '100%', boxSizing: 'border-box', height: 48, borderRadius: 16, border: `2px solid ${C.line}`, padding: '0 14px', fontFamily: FONT, fontSize: 17, color: C.text, background: '#FFFFFF' }}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={open}
+              disabled={!code.trim()}
+              style={{ ...btn, height: 48, padding: '0 20px', borderRadius: 16, background: C.orange, color: '#FFFFFF', fontSize: 17, fontWeight: 600, boxShadow: `inset 0 -5px 0 ${C.orangeInset}`, opacity: code.trim() ? 1 : 0.5 }}
+            >
+              Aç
+            </button>
+          </div>
+        </>
+      )}
+      {message && (
+        <div role="status" style={{ fontSize: 14, fontWeight: 600, color: message.error ? '#B3261E' : C.muted }}>
+          {message.text}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ---------------------------------------------------------------- screen
 
 export function Settings({ onClose }: { onClose: () => void }) {
@@ -1480,6 +1556,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             {portrait && <VoiceAndParrot />}
             <SendSetup />
             {portrait && <Backup />}
+            {portrait && <FamilyBoard />}
           </div>
           {!portrait && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
@@ -1488,6 +1565,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </div>
               <VoiceAndParrot />
               <Backup />
+              <FamilyBoard />
             </div>
           )}
         </div>
@@ -1512,6 +1590,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
               <CoreRowEditor />
               <SendSetup />
               <Backup />
+              <FamilyBoard />
             </>
           )}
         </div>
@@ -1531,6 +1610,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             <VoiceAndParrot />
             <SendSetup />
             <Backup />
+            <FamilyBoard />
           </div>
         )}
       </div>

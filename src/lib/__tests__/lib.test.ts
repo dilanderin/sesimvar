@@ -61,7 +61,7 @@ describe('colour tints match the design', () => {
 });
 
 describe('seed board', () => {
-  const words = seedWords();
+  const words = seedWords('zeki');
 
   it('has unique ids and unique places per category', () => {
     expect(new Set(words.map((w) => w.id)).size).toBe(words.length);

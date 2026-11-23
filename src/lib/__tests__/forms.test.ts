@@ -3,7 +3,7 @@ import { seedWords } from '../data';
 import { FORM_WORD_IDS, wordForms } from '../forms';
 
 describe('word forms', () => {
-  const seeds = seedWords();
+  const seeds = [...seedWords('genel'), ...seedWords('zeki')];
   const ids = new Set(seeds.map((w) => w.id));
 
   it('only refers to words that exist on the board', () => {

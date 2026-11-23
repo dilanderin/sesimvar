@@ -14,7 +14,7 @@ describe('second page', () => {
   });
 
   it('a category with room still fills its first page first', () => {
-    expect(freeSlot(words, 'yerler', MAX_SLOTS_PER_CATEGORY)).toBe(3);
+    expect(freeSlot(words, 'yerler', MAX_SLOTS_PER_CATEGORY)).toBe(2);
   });
 
   it('is on for new boards, and turned on once for boards saved with it off', () => {

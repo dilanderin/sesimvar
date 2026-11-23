@@ -56,7 +56,15 @@ export interface Word {
   recording?: Recording;
 }
 
-type Seed = [label: string, picto: string | null, opts?: { say?: string; hidden?: boolean; keepCase?: boolean }];
+/** Whose board: "genel" for everyone, "zeki" for the family's own board
+ *  (sesimvar.d3asoft.com/zeki, or Ayarlar → Aile kodu). */
+export type Profile = 'genel' | 'zeki';
+
+type Seed = [
+  label: string,
+  picto: string | null,
+  opts?: { say?: string; hidden?: boolean; keepCase?: boolean; only?: Profile; slot?: number },
+];
 
 const SEEDS: Record<CategoryId | 'core', Seed[]> = {
   core: [
@@ -86,11 +94,13 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
     ['Baba', 'baba.svg', { keepCase: true }],
     ['Amca', 'amca.svg', { keepCase: true }],
     ['Hala', 'hala.svg', { keepCase: true }],
-    ['Dilan', 'dilan.svg', { keepCase: true }],
-    ['Güler Teyze', 'teyze.svg', { keepCase: true }],
+    // The family's own people are only on Zeki's board.
+    ['Dilan', 'dilan.svg', { keepCase: true, only: 'zeki' }],
+    ['Güler Teyze', 'teyze.svg', { keepCase: true, only: 'zeki' }],
     ['Dayı', 'dayi.svg', { keepCase: true }],
     ['Doktor', 'doktor.png', { keepCase: true, hidden: true }],
-    ['Barış', 'baris.svg', { keepCase: true }],
+    ['Barış', 'baris.svg', { keepCase: true, only: 'zeki' }],
+    ['Teyze', 'teyze.svg', { keepCase: true, only: 'genel', slot: 5 }],
   ],
   eylem: [
     ['Gel', 'gel.svg'],
@@ -167,7 +177,7 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
   yerler: [
     ['Eve', 'ev.png'],
     ['Köy', 'koy.png'],
-    ['Elazığ', 'elazig.png', { keepCase: true }],
+    ['Elazığ', 'elazig.png', { keepCase: true, only: 'zeki' }],
   ],
 };
 
@@ -269,16 +279,19 @@ export function defaultSay(label: string, category: CategoryId | 'core', keepCas
   return lowerTr(label);
 }
 
-export function seedWords(): Word[] {
+/** The built-in words of a board. Everyone gets the same words in the same
+ *  places; Zeki's board adds the family's own names and places. */
+export function seedWords(profile: Profile = 'genel'): Word[] {
   const words: Word[] = [];
   for (const [cat, list] of Object.entries(SEEDS) as [CategoryId | 'core', Seed[]][]) {
-    list.forEach(([label, picto, opts], slot) => {
+    list.forEach(([label, picto, opts], index) => {
+      if (opts?.only && opts.only !== profile) return;
       words.push({
         id: `${cat}-${slug(label)}`,
         label,
         say: opts?.say ?? defaultSay(label, cat, opts?.keepCase),
         category: cat,
-        slot,
+        slot: opts?.slot ?? index,
         hidden: !!opts?.hidden,
         picture: picto ? { kind: 'builtin', src: pictoSrc(picto) } : { kind: 'text' },
       });
