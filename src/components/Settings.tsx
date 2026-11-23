@@ -16,6 +16,7 @@ import {
   Type,
   Upload,
   X,
+  RotateCcw,
 } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, LIBRARY, MAX_SLOTS_PER_CATEGORY, SLOTS_PER_CATEGORY, defaultSay, freeSlot, newWordId, searchLibrary, type CategoryId, type LibraryItem, type Picture, type Word } from '../lib/data';
 import { BackupError, createBackup, parseBackup, restoreBackup, saveBackupFile, summarize } from '../lib/backup';
@@ -27,7 +28,10 @@ import { onVoicesChanged, pickVoice, previewVoice, setSpeechRate, setVoicePack, 
 import { VOICE_PACKS, clipUrl } from '../lib/voice';
 import {
   addWord,
+  canUndoReset,
   deleteBlob,
+  resetToOriginal,
+  undoReset,
   moveWord,
   newBlobKey,
   removeWord,
@@ -1004,7 +1008,7 @@ function Appearance() {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 600 }}>İkinci sayfa</div>
           <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
-            Her kategoriye 12 yer daha. Tahtada seçili kategoriye bir daha dokununca 2. sayfa açılır. İlk sayfa hiç değişmez.
+            Her kategoriye 12 yer daha. Tahtada aşağı kaydırınca (ya da seçili kategoriye bir daha dokununca) 2. sayfa görünür. İlk sayfa hiç değişmez.
           </div>
         </div>
         <Toggle on={!!settings.secondPage} onChange={(secondPage) => updateSettings({ secondPage })} label="İkinci sayfa" />
@@ -1209,6 +1213,8 @@ function SendSetup() {
 
 function Backup() {
   const [busy, setBusy] = useState<'save' | 'restore' | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [undoable, setUndoable] = useState(canUndoReset);
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -1300,6 +1306,58 @@ function Backup() {
           {message.text}
         </div>
       )}
+      <div style={{ borderTop: `2px solid ${C.soft}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {!confirmReset ? (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmReset(true);
+                setMessage(null);
+              }}
+              style={{ ...action, background: 'transparent', color: '#B3261E', boxShadow: `inset 0 0 0 2px #F3C9C4` }}
+            >
+              <RotateCcw size={18} strokeWidth={2.6} aria-hidden="true" /> İlk haline döndür
+            </button>
+            {undoable && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (undoReset()) setMessage({ text: 'Tahta sıfırlamadan önceki haline geri getirildi.' });
+                  setUndoable(false);
+                }}
+                style={{ ...action, background: C.soft, color: C.text, boxShadow: `inset 0 -4px 0 ${C.line}` }}
+              >
+                Geri al
+              </button>
+            )}
+          </div>
+        ) : (
+          <div role="alertdialog" aria-label="İlk haline döndürülsün mü?" style={{ background: '#FDECEA', borderRadius: 18, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#8C1D18', lineHeight: 1.4 }}>
+              Tahta, uygulamanın ilk açıldığı gibi olur: eklediğiniz kelimeler, değiştirdiğiniz yerler ve tüm ayarlar (Gönder adresi dahil) başa döner.
+              Hemen ardından “Geri al” ile eski haline getirebilirsiniz; yine de önce Yedekle’ye basmanız iyi olur.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="button" onClick={() => setConfirmReset(false)} style={{ ...action, background: '#FFFFFF', color: C.text, boxShadow: `inset 0 -4px 0 ${C.line}` }}>
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetToOriginal();
+                  setConfirmReset(false);
+                  setUndoable(true);
+                  setMessage({ text: 'Tahta ilk haline döndü. Fikrinizi değiştirirseniz “Geri al”a basın.' });
+                }}
+                style={{ ...action, background: '#B3261E', color: '#FFFFFF', boxShadow: 'inset 0 -5px 0 #8C1D18' }}
+              >
+                Evet, sıfırla
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
   );
 }

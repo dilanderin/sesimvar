@@ -27,9 +27,8 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 - [x] **Speech speed** (pitch still to do) in Ses ve papağan.
 - [x] **Word forms** (Turkish suffixes, in `src/lib/forms.ts`; add forms for new built-in words there): long-press a card to choose suya, suyu, suda… Keep a single tap working exactly as now.
 - [x] **Library browser** in Kelime ekle: show the ready-made pictures by category, not only by typing.
-- [x] **Second page per category** (2026-11-23): Ayarlar → Görünüm → İkinci sayfa, off by default. Places 12–23; tap the chosen category again to turn the page (dots on its button show the page). A category always opens on page 1, and shows only one page while page 2 is empty. Turning it off keeps the words.
-- [ ] **Suggest turning on İkinci sayfa** to the family? Five categories are full; the option is off until they choose it.
-- [x] **More vocabulary in the library**: İç, Ye, Otur, Kalk, Dur, Uyu, Sarıl, Büyük, Küçük, Çok, Az, Soğuk (2026-11-22). More could follow: needs (yıka, giy, aç/kapat ışık), feelings.
+- [x] **Second page per category** (2026-11-23): places 12–23, reached by **scrolling down** the board (snaps a page at a time) or tapping the chosen category again; dots on its button show the page. On by default (owner's choice). A category always opens on page 1 and only scrolls when page 2 has a visible word; with one page the board is pixel-identical to before.
+- [x] **İlk haline döndür** in Ayarlar → Yedek, with a confirmation and an undo (the previous board is kept in localStorage `sesimvar:before-reset`; photos and recordings stay in IndexedDB).
 - [ ] **The same young male voice for words the family types**: today they fall back to the device voice (female Yelda on iPad). Options: run Piper (open-source, `tr_TR-dfki-medium`, male) in the browser via onnxruntime-web, downloaded once and cached; or record those words here on request and ship them.
 - [ ] **Usage-aware suggestions** (local only): in Ayarlar, show words the family often types but that are not on the board yet.
 - [ ] **Accessibility**: VoiceOver labels audit, switch/keyboard scanning, high-contrast option.
@@ -39,6 +38,8 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 
 - **Gönder** sends the sentence to the owner in the Messages app (2026-11-21). It opens Messages with the text filled in; iOS requires one tap on send. Without an address it only speaks.
 - Changes are pushed directly to `main`, without pull requests.
+- **Second page** (2026-11-23): on by default, as a scroll down ("2. sayfa kapalı ama scroll olabilir, niye olmasın?").
+- **Reset to original** (2026-11-23): the owner asked for it. It is behind a confirmation and can be undone right after.
 - **Voice** (2026-11-22): the person who uses the board wants a young (about 20) male voice, not a family member's. The prerecorded "Ahmet" voice (Microsoft tr-TR-AhmetNeural, pitch +16 Hz, rate +6%; the owner picked this one, "daha genç") is the default. Family recordings still play first when a word has one.
 
 ## Ask the family (don't do without the owner)

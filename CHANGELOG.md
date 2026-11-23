@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-23 (afternoon)
+- **The second page is now a scroll down, and it is on.** Swipe the board up to see a category's 2nd page; it stops neatly at the page. Tapping the chosen category again still turns the page too. The dots on the category button and a small arrow under the board show where you are. The first page looks exactly as before, and a category with an empty 2nd page does not scroll at all. It can be turned off in Ayarlar → Görünüm → İkinci sayfa.
+- **Ayarlar → Yedek → İlk haline döndür:** puts the board back the way the app first started (built-in words and places, all settings). It asks first, and right after there is a **Geri al** button that brings everything back exactly as it was.
+
 ## 2026-11-23
 - **A second page for each category** (Ayarlar → Görünüm → **İkinci sayfa**, off until you turn it on). Each category gets 12 more places. Temel, Eylem, Günlük, Vücut and Eşyalar were full, so now words like İç, Ye, Uyu, Büyük, Küçük can go into their own category.
   - On the board, **tap the chosen category again** to see its 2nd page; tap once more to go back. Two small dots on the category button show which page is open.

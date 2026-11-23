@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Check, History, Settings as SettingsIcon, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, History, Settings as SettingsIcon, X } from 'lucide-react';
 import { CATEGORIES, CATEGORY_BY_ID, SLOTS_PER_CATEGORY, type Category, type CategoryId, type Word } from '../lib/data';
 import { DECOR } from '../lib/decor';
 import { preloadClips, saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
@@ -132,19 +132,31 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
 
   const category = CATEGORY_BY_ID[categoryId];
   const catTones = toneFor(category);
-  // Optional second page: it exists for a category only when it has a visible word.
+  // Second page (scroll down): a category has it only when it has a visible word there.
   const [page, setPage] = useState(0);
   const pages = useMemo(
     () => (settings.secondPage && words.some((w) => w.category === categoryId && !w.hidden && w.slot >= SLOTS_PER_CATEGORY && w.slot < 2 * SLOTS_PER_CATEGORY) ? 2 : 1),
     [settings.secondPage, words, categoryId],
   );
   const shownPage = page < pages ? page : 0;
-  const slots = useMemo(() => {
-    const first = shownPage * SLOTS_PER_CATEGORY;
-    const arr: (Word | null)[] = Array.from({ length: SLOTS_PER_CATEGORY }, () => null);
-    for (const w of words) if (w.category === categoryId && !w.hidden && w.slot >= first && w.slot < first + SLOTS_PER_CATEGORY) arr[w.slot - first] = w;
-    return arr;
-  }, [words, categoryId, shownPage]);
+  const pageSlots = useMemo(
+    () =>
+      Array.from({ length: pages }, (_, p) => {
+        const first = p * SLOTS_PER_CATEGORY;
+        const arr: (Word | null)[] = Array.from({ length: SLOTS_PER_CATEGORY }, () => null);
+        for (const w of words) if (w.category === categoryId && !w.hidden && w.slot >= first && w.slot < first + SLOTS_PER_CATEGORY) arr[w.slot - first] = w;
+        return arr;
+      }),
+    [words, categoryId, pages],
+  );
+  const slots = useMemo(() => pageSlots.flat(), [pageSlots]);
+  const gridRef = useRef<HTMLElement>(null);
+  /** Scroll the board to a page (tapping the chosen category again, or a new category). */
+  const goToPage = (p: number, smooth: boolean) => {
+    const el = gridRef.current;
+    if (el) el.scrollTo({ top: p * el.clientHeight, behavior: smooth && motion ? 'smooth' : 'auto' });
+    setPage(p);
+  };
   const coreWords = useMemo(
     () => settings.core.map((id) => words.find((w) => w.id === id)).filter((w): w is Word => !!w),
     [settings.core, words],
@@ -663,11 +675,21 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     </div>
   );
 
-  const gridStyle: CSSProperties = {
+  // The board area scrolls a page at a time; each page fills it exactly, so the
+  // first page looks just as it always has.
+  const boardStyle: CSSProperties = {
     position: 'relative',
     zIndex: 1,
     flex: 1,
     minHeight: 0,
+    // One page: no scrolling and nothing clipped (the cards' shadows show as always).
+    ...(pages > 1 ? { overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain' } : null),
+  };
+  const gridStyle: CSSProperties = {
+    height: '100%',
+    boxSizing: 'border-box',
+    scrollSnapAlign: 'start',
+    scrollSnapStop: 'always',
     display: 'grid',
     gridTemplateColumns: `repeat(${phone && portrait ? 3 : portrait ? 4 : 6}, minmax(0, 1fr))`,
     gridTemplateRows: `repeat(${phone && portrait ? 4 : portrait ? 3 : 2}, minmax(0, 1fr))`,
@@ -694,26 +716,51 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: decor }} />
       {header}
       {coreRow}
-      <section aria-label={`${category.name} kelimeleri${pages > 1 ? `, sayfa ${shownPage + 1}` : ''}`} style={gridStyle}>
-        {slots.map((w, i) =>
-          w ? (
-            <WordCard
-              key={w.id}
-              word={w}
-              tones={catTones}
-              theme={theme}
-              size={size}
-              ring={ringId === w.id}
-              jelly={jellyId === w.id}
-              compact={phone}
-              onTap={tap}
-              onLongPress={longPressFor(w)}
-            />
-          ) : (
-            <div key={`empty-${i}`} aria-hidden="true" />
-          ),
-        )}
+      <section
+        ref={gridRef}
+        aria-label={`${category.name} kelimeleri${pages > 1 ? `, sayfa ${shownPage + 1} / ${pages}` : ''}`}
+        className="kb-noscrollbar"
+        style={boardStyle}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const p = Math.round(el.scrollTop / Math.max(1, el.clientHeight));
+          if (p !== page) setPage(p);
+        }}
+      >
+        {pageSlots.map((ps, p) => (
+          <div key={p} role="group" aria-label={pages > 1 ? `Sayfa ${p + 1}` : undefined} style={gridStyle}>
+            {ps.map((w, i) =>
+              w ? (
+                <WordCard
+                  key={w.id}
+                  word={w}
+                  tones={catTones}
+                  theme={theme}
+                  size={size}
+                  ring={ringId === w.id}
+                  jelly={jellyId === w.id}
+                  compact={phone}
+                  onTap={tap}
+                  onLongPress={longPressFor(w)}
+                />
+              ) : (
+                <div key={`empty-${i}`} aria-hidden="true" />
+              ),
+            )}
+          </div>
+        ))}
       </section>
+      {pages > 1 && !phone && (
+        // A small hint that there is more below (or above), in the board's bottom margin.
+        <span
+          aria-hidden="true"
+          style={{ position: 'relative', zIndex: 1, height: 0, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}
+        >
+          <span className={motion && shownPage === 0 ? 'kb-bob' : undefined} style={{ position: 'absolute', bottom: portrait ? 0 : 1, color: theme.muted, display: 'flex' }}>
+            {shownPage === 0 ? <ChevronDown size={20} strokeWidth={3} /> : <ChevronUp size={20} strokeWidth={3} />}
+          </span>
+        </span>
+      )}
       <div style={{ position: 'relative', zIndex: 1, flex: 'none', display: 'flex', justifyContent: 'center', padding: phone ? '0 8px 8px' : '0 0 14px', minWidth: 0 }}>
         <CategoryNav
           compact={phone}
@@ -728,12 +775,12 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
             lastActivity.current = Date.now();
             if (c.id === categoryId) {
               // The chosen category again: its other page.
-              if (pages > 1) setPage(shownPage === 0 ? 1 : 0);
+              if (pages > 1) goToPage(shownPage === 0 ? 1 : 0, true);
               return;
             }
             // A category always opens on its first page.
             setCategoryId(c.id);
-            setPage(0);
+            goToPage(0, false);
           }}
         />
       </div>

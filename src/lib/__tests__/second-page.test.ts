@@ -17,12 +17,14 @@ describe('second page', () => {
     expect(freeSlot(words, 'yerler', MAX_SLOTS_PER_CATEGORY)).toBe(3);
   });
 
-  it('is off for new boards and for boards saved before it existed', () => {
-    expect(initialState().settings.secondPage).toBe(false);
+  it('is on for new boards, and turned on once for boards saved with it off', () => {
+    expect(initialState().settings.secondPage).toBe(true);
     const old = initialState();
-    const { secondPage: _drop, ...settings } = old.settings;
-    void _drop;
-    expect(upgradeState({ ...old, settings: settings as typeof old.settings }).settings.secondPage).toBe(false);
+    const saved = { ...old, settings: { ...old.settings, secondPage: false }, migrations: ['kisiler-baris-guler-dayi'] };
+    const up = upgradeState(saved);
+    expect(up.settings.secondPage).toBe(true);
+    // The family turns it off again: it stays off.
+    expect(upgradeState({ ...up, settings: { ...up.settings, secondPage: false } }).settings.secondPage).toBe(false);
   });
 
   it('keeps second-page words when it is turned off (they are only not shown)', () => {

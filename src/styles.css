@@ -174,3 +174,10 @@ select:focus-visible {
     animation: none;
   }
 }
+
+/* Second-page hint: the arrow bobs gently. */
+@keyframes kb-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+.kb-bob { animation: kb-bob 1.6s ease-in-out infinite; }

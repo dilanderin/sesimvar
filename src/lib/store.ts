@@ -26,7 +26,8 @@ export interface Settings {
   sendTo: { name: string; address: string };
   /** Hold a card to choose a word form (kolum, suya, geliyorum…). Off by default. */
   wordForms: boolean;
-  /** A second page of 12 places per category. Off by default; the first page never changes. */
+  /** A second page of 12 places per category, reached by scrolling down (on by default since
+   *  2026-11-23, the owner's choice). The first page never changes. */
   secondPage: boolean;
 }
 
@@ -71,7 +72,7 @@ export function initialState(): AppState {
       tapGuardMs: 0,
       sendTo: { name: '', address: '' },
       wordForms: false,
-      secondPage: false,
+      secondPage: true,
     },
     migrations: MIGRATIONS.map((m) => m.id),
   };
@@ -108,7 +109,7 @@ export function addMissingSeeds(words: Word[]): Word[] {
 /** One-time changes the family asked for, applied once to boards saved
  *  earlier. Each one only adds or shows words; nothing moves or disappears.
  *  A board remembers which ran, so a word hidden again later stays hidden. */
-export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[] }[] = [
+export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[]; settings?: (s: Settings) => Settings }[] = [
   {
     // "Add Kişiler: Barış, Güler Teyze, Dayı" (2026-11-22).
     id: 'kisiler-baris-guler-dayi',
@@ -140,6 +141,12 @@ export const MIGRATIONS: { id: string; run: (words: Word[]) => Word[] }[] = [
       return next;
     },
   },
+  {
+    // The owner asked for the second page to be on, as a scroll down (2026-11-23).
+    id: 'second-page-on',
+    run: (words) => words,
+    settings: (s) => ({ ...s, secondPage: true }),
+  },
 ];
 
 /** Bring a saved or restored board up to date with this version of the app. */
@@ -147,14 +154,19 @@ export function upgradeState(saved: AppState): AppState {
   const fresh = initialState();
   const done = new Set(saved.migrations ?? []);
   let words = refreshSeedPictures(saved.words);
-  for (const m of MIGRATIONS) if (!done.has(m.id)) words = m.run(words);
+  let settings: Settings = { ...fresh.settings, ...saved.settings };
+  for (const m of MIGRATIONS) {
+    if (done.has(m.id)) continue;
+    words = m.run(words);
+    if (m.settings) settings = m.settings(settings);
+  }
   words = addMissingSeeds(words);
   return {
     ...fresh,
     ...saved,
     version: 1,
     words,
-    settings: { ...fresh.settings, ...saved.settings },
+    settings,
     migrations: MIGRATIONS.map((m) => m.id),
   };
 }
@@ -292,6 +304,44 @@ export function newBlobKey(prefix: string) {
 
 export async function getBlob(key: string): Promise<Blob | undefined> {
   return get<Blob>(`blob:${key}`);
+}
+
+const BEFORE_RESET_KEY = 'sesimvar:before-reset';
+
+/** Put the board back the way the app first started: built-in words, places
+ *  and settings. The board as it was is kept, so it can be brought back with
+ *  undoReset(); photos and recordings stay on the device for that. */
+export function resetToOriginal() {
+  try {
+    localStorage.setItem(BEFORE_RESET_KEY, JSON.stringify(state));
+  } catch {
+    /* no room to keep a copy: still reset, the family confirmed it */
+  }
+  state = initialState();
+  emit();
+}
+
+/** True while the board from before the last reset can be brought back. */
+export function canUndoReset(): boolean {
+  try {
+    return !!localStorage.getItem(BEFORE_RESET_KEY);
+  } catch {
+    return false;
+  }
+}
+
+/** Bring back the board from before the last reset. */
+export function undoReset(): boolean {
+  try {
+    const raw = localStorage.getItem(BEFORE_RESET_KEY);
+    if (!raw) return false;
+    state = upgradeState(JSON.parse(raw) as AppState);
+    localStorage.removeItem(BEFORE_RESET_KEY);
+    emit();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Replace the whole board (used when restoring a backup). */
