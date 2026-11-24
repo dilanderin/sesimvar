@@ -1009,6 +1009,15 @@ function Appearance() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 600 }}>Kelime önerileri</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
+            Bir kelimeye dokununca balonda sıradaki olası kelimeler çıkar (Su → istiyorum, ver). Söylenen cümlelerden bu cihazda öğrenir.
+          </div>
+        </div>
+        <Toggle on={settings.suggestions !== false} onChange={(suggestions) => updateSettings({ suggestions })} label="Kelime önerileri" />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
           <div style={{ fontSize: 17, fontWeight: 600 }}>İkinci sayfa</div>
           <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, lineHeight: 1.4 }}>
             Her kategoriye 12 yer daha. Tahtada aşağı kaydırınca (ya da seçili kategoriye bir daha dokununca) 2. sayfa görünür. İlk sayfa hiç değişmez.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-24 (afternoon)
+- **Kelime önerileri: the next word comes to you.** After a word is tapped, 2–3 likely next words appear as small dashed cards in the speech balloon. Tap one to add it and hear it. No searching the board needed.
+  - Su → **istiyorum, istemiyorum, ver** · Kol → **acıyor, kaşınıyor** · Anne → **gel, nerede, ara** · Ben → **acıktım, susadım, yoruldum**.
+  - **It learns** from the sentences he reads or sends with Oku and Gönder, so his own habits come first after a while. This stays on the iPad and is never sent anywhere.
+  - Only words that are on the board are suggested, and **the cards on the board never move**. The sentence always stays fully visible, so when it gets long the suggestions make room.
+  - Ayarlar → Görünüm → **Kelime önerileri** turns it off.
+
 ## 2026-11-24
 - **12 new ready-made pictures, with Ahmet's voice:**
   - Polite words: **Merhaba, Teşekkürler, Lütfen, Özür dilerim, Günaydın, İyi geceler** (in Temel).

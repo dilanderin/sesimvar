@@ -7,6 +7,7 @@ import { wordForms } from '../lib/forms';
 import { isValidAddress, openMessages, sentenceText, smsUrl } from '../lib/messages';
 import { clearHistory, rememberSentence, useAppState } from '../lib/store';
 import { countSend, countSentence, countTap } from '../lib/usage';
+import { suggestNext } from '../lib/predict';
 import { tones, type Theme, type Tones } from '../lib/theme';
 import {
   ActionButton,
@@ -17,6 +18,7 @@ import {
   EmptyHint,
   RoundIconButton,
   SentenceChip,
+  SuggestionChip,
   TrashIcon,
   WordCard,
   type ChipState,
@@ -55,7 +57,7 @@ const IDLE_BEFORE_CHEEKY_MS = 25_000;
 const SETTINGS_HOLD_MS = 2_000;
 
 export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings: () => void }) {
-  const { words, settings, history } = useAppState();
+  const { words, settings, history, next: learnedNext } = useAppState();
   const { orientation, scale, phone, w: stageW, h: stageH } = useStage();
   const portrait = orientation === 'portrait';
   const motion = settings.motion;
@@ -180,12 +182,30 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     });
   }, [words]);
 
+  // ------------------------------------------- next-word suggestions
+  const lastChip = chips[chips.length - 1];
+  const suggestions = useMemo(() => {
+    if (settings.suggestions === false || readingIdx !== null || launching || sent) return [];
+    if (lastChip?.pending) return [];
+    return suggestNext(lastChip?.word ?? null, words, learnedNext, 3);
+  }, [settings.suggestions, readingIdx, launching, sent, lastChip, words, learnedNext, phone]);
+  // Show only as many suggestions as fit next to the sentence: the sentence
+  // itself always stays fully in view (none when there is no room).
+  const [fit, setFit] = useState(3);
+  const suggestionKey = suggestions.map((w) => w.id).join('|');
+
   // Keep the newest word in view when the sentence gets long.
   const rowRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const row = rowRef.current;
-    if (row) row.scrollLeft = row.scrollWidth;
-  }, [chips.length]);
+    if (!row) return;
+    const cardW = phone ? 56 + 6 : portrait ? 74 + 10 : 80 + 10;
+    const items = [...row.querySelectorAll('[role="listitem"]')] as HTMLElement[];
+    const sentenceW = items.reduce((sum, el) => sum + el.offsetWidth + (phone ? 8 : 14), 0) || (row.firstElementChild as HTMLElement | null)?.offsetWidth || 0;
+    const room = Math.max(0, Math.min(3, Math.floor((row.clientWidth - sentenceW - 8) / cardW)));
+    if (room !== fit) setFit(room);
+    row.scrollLeft = row.scrollWidth;
+  }, [chips.length, suggestionKey, fit, phone, portrait, stageW]);
 
   const stopReading = useCallback(() => {
     if (readingIdx !== null) {
@@ -320,6 +340,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
     },
     [read, tonesForWord],
   );
+
 
   // ------------------------------------------------------------- Gönder
   const send = useCallback(() => {
@@ -509,6 +530,13 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
             <SentenceChip chip={c} theme={theme} orientation={orientation} reading={readingIdx === i} motion={motion} first={i === 0} compact={phone} />
           </span>
         ))}
+        {suggestions.length > 0 && fit > 0 && (
+          <span role="group" aria-label="Öneriler" style={{ display: 'flex', gap: phone ? 6 : 10, flex: 'none', paddingLeft: chips.length ? (phone ? 2 : 6) : 0 }}>
+            {suggestions.slice(0, fit).map((w) => (
+              <SuggestionChip key={w.id} word={w} tones={tonesForWord(w)} theme={theme} orientation={orientation} compact={phone} onTap={tap} />
+            ))}
+          </span>
+        )}
       </div>
       {!(phone && portrait) && roundButtons}
     </div>

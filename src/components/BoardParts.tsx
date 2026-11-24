@@ -321,6 +321,83 @@ export const SentenceChip = forwardRef<
   );
 });
 
+/** A suggested next word in the balloon: a small card (picture over word)
+ *  with a dashed edge, so it reads as "maybe this?" next to the real
+ *  sentence and three fit beside it. Tapping adds it. */
+export function SuggestionChip({
+  word,
+  tones: t,
+  theme,
+  orientation,
+  compact,
+  onTap,
+}: {
+  word: Word;
+  tones: Tones;
+  theme: Theme;
+  orientation: Orientation;
+  compact?: boolean;
+  onTap: (word: Word, circle: HTMLElement) => void;
+}) {
+  const portrait = orientation === 'portrait';
+  const z = compact ? { w: 56, h: 58, circle: 32, font: 11 } : portrait ? { w: 74, h: 74, circle: 42, font: 13 } : { w: 80, h: 82, circle: 46, font: 14 };
+  return (
+    <button
+      type="button"
+      className="kb-press-small"
+      aria-label={`Öneri: ${word.label}`}
+      onClick={(e) => onTap(word, (e.currentTarget.querySelector('[data-circle]') as HTMLElement) ?? e.currentTarget)}
+      style={{
+        ...resetButton,
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: compact ? 2 : 4,
+        width: z.w,
+        height: z.h,
+        boxSizing: 'border-box',
+        padding: '0 3px',
+        borderRadius: compact ? 14 : 20,
+        background: theme.mode === 'day' ? '#FFFFFF' : theme.surface,
+        border: `${compact ? 2 : 3}px dashed ${t.base}`,
+        flex: 'none',
+      }}
+    >
+      <span
+        data-circle
+        style={{
+          width: z.circle,
+          height: z.circle,
+          borderRadius: '50%',
+          background: t.pill,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          flex: 'none',
+        }}
+      >
+        <WordPicture picture={word.picture} label={word.label} size={Math.round(z.circle * 0.82)} color={t.base} />
+      </span>
+      <span
+        style={{
+          fontSize: word.say.length > 9 ? z.font - 1 : z.font,
+          fontWeight: 600,
+          color: theme.text,
+          lineHeight: 1.05,
+          whiteSpace: 'nowrap',
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {word.say}
+      </span>
+    </button>
+  );
+}
+
 export function EmptyHint({ theme, compact }: { theme: Theme; compact?: boolean }) {
   const color = theme.mode === 'day' ? '#8A5A4A' : '#A7C4C2';
   return (

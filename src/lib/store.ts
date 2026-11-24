@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { del, get, set } from 'idb-keyval';
 import { freeSlot, seedWords, type Profile, type Word } from './data';
 import { currentProfile, saveProfile } from './profile';
+import { learnSentence, type NextCounts } from './predict';
 import { DEFAULT_VOICE_PACK } from './voice';
 
 export type CardSize = 'small' | 'medium' | 'large';
@@ -32,6 +33,8 @@ export interface Settings {
   secondPage: boolean;
   /** Send anonymous usage counts (no words or sentences). On by default; the owner asked for it. */
   shareUsage: boolean;
+  /** Next-word suggestions in the sentence balloon. On by default (owner's request). */
+  suggestions: boolean;
 }
 
 export type SpeechRate = 'slow' | 'normal' | 'fast';
@@ -48,6 +51,8 @@ export interface AppState {
   settings: Settings;
   /** One-time changes already applied to this board (see MIGRATIONS). */
   migrations?: string[];
+  /** Which word usually follows which, learned from sentences said (see predict.ts). Stays on the device. */
+  next?: NextCounts;
 }
 
 const STORAGE_KEY = 'sesimvar:v1';
@@ -77,6 +82,7 @@ export function initialState(profile: Profile = activeProfile): AppState {
       wordForms: false,
       secondPage: true,
       shareUsage: true,
+      suggestions: true,
     },
     migrations: MIGRATIONS.filter((m) => appliesTo(m, profile)).map((m) => m.id),
   };
@@ -435,10 +441,12 @@ export function replaceState(next: AppState) {
 export function rememberSentence(ids: string[]) {
   if (!ids.length) return;
   setState((s) => {
+    // Learn which word follows which, for next-word suggestions.
+    const next = learnSentence(s.next, ids);
     const prev = s.history ?? [];
-    if (prev[0] && prev[0].join('|') === ids.join('|')) return s;
+    if (prev[0] && prev[0].join('|') === ids.join('|')) return { ...s, next };
     const rest = prev.filter((h) => h.join('|') !== ids.join('|'));
-    return { ...s, history: [ids, ...rest].slice(0, HISTORY_LIMIT) };
+    return { ...s, next, history: [ids, ...rest].slice(0, HISTORY_LIMIT) };
   });
 }
 
