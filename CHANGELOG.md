@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-24
+- **12 new ready-made pictures, with Ahmet's voice:**
+  - Polite words: **Merhaba, Teşekkürler, Lütfen, Özür dilerim, Günaydın, İyi geceler** (in Temel).
+  - Favourite foods: **Kahve, Süt, Meyve, Çikolata, Dondurma, Pizza** (in Günlük).
+  - Type one in Ayarlar → Kelime ekle, or pick it from Hazır resimler. Temel and Günlük are full on the first page, so these go on their 2nd page (scroll down).
+
 ## 2026-11-23 (night)
 - **Zeki's own board: sesimvar.d3asoft.com/zeki.** Other people have started using Sesim Var, so the family's own names and places (**Dilan, Barış, Güler Teyze, Elazığ**) now appear only on Zeki's board. Everyone else gets a general board, with Anne, Baba, Amca, Hala, Teyze and Dayı.
 - On a device that already had these words, they go away from the general board only if nobody changed them (a word with a recording or photo stays). Opening Zeki's board brings them back **in exactly the same places**.

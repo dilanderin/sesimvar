@@ -30,6 +30,7 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 - [x] **Second page per category** (2026-11-23): places 12–23, reached by **scrolling down** the board (snaps a page at a time) or tapping the chosen category again; dots on its button show the page. On by default (owner's choice). A category always opens on page 1 and only scrolls when page 2 has a visible word; with one page the board is pixel-identical to before.
 - [x] **İlk haline döndür** in Ayarlar → Yedek, with a confirmation and an undo (the previous board is kept in localStorage `sesimvar:before-reset`; photos and recordings stay in IndexedDB).
 - [ ] **The same young male voice for words the family types**: today they fall back to the device voice (female Yelda on iPad). Options: run Piper (open-source, `tr_TR-dfki-medium`, male) in the browser via onnxruntime-web, downloaded once and cached; or record those words here on request and ship them.
+- [x] **Polite words and favourite foods in the library** (2026-11-24): Merhaba, Teşekkürler, Lütfen, Özür dilerim, Günaydın, İyi geceler, Kahve, Süt, Meyve, Çikolata, Dondurma, Pizza (new pictures + Ahmet clips). More could follow: clothes (giy, ayakkabı), hygiene (yıka, diş fırçala), places (okul, hastane is in).
 - [ ] **Usage-aware suggestions** (local only): in Ayarlar, show words the family often types but that are not on the board yet.
 - [ ] **Accessibility**: VoiceOver labels audit, switch/keyboard scanning, high-contrast option.
 - [ ] **Performance**: lighter first load, image lazy-loading in Ayarlar.
@@ -47,3 +48,4 @@ Sesim Var is someone's voice. Every change has to make it better for the person 
 ## Ask the family (don't do without the owner)
 
 - Changing the six words of the always-visible row by default.
+- **Ahmet's voice for words the family types** (asked 2026-11-24). Today those words are read by the iPad's own voice (female). Options: (a) a free open-source male voice that runs on the iPad itself, offline, but it is a different man's voice and needs a one-time ~60 MB download; (b) the family adds the word, and the next daily run records it in Ahmet's voice: this needs the typed word to be sent to the site, which the app does not do today; (c) the family records the word in Ayarlar in a voice of their choice (works today).

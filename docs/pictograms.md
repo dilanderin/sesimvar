@@ -19,7 +19,7 @@ The recurring character has short brown hair and a blue t-shirt. Body-part pictu
 
 ## Status
 
-All built-in words use the outlined set (121 pictures). The exceptions are the relatives (Amca, Hala, Teyze, Dayı) and Dilan, which keep "add a photo" cards on purpose. New words follow the steps above.
+All built-in words use the outlined set (121 pictures, plus 12 library pictures added on 2026-11-24: polite words and foods). The exceptions are the relatives (Amca, Hala, Teyze, Dayı) and Dilan, which keep "add a photo" cards on purpose. New words follow the steps above.
 
 ## Words from the first version's board
 
