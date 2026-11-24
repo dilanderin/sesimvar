@@ -18,6 +18,9 @@ PACKS = {
     'ahmet': dict(voice='tr-TR-AhmetNeural', pitch='+16Hz', rate='+6%'),
 }
 
+# Question words are read with a question's rising tone.
+QUESTIONS = {'ne', 'nerede', 'kim', 'neden', 'nasıl', 'ne zaman'}
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROXY = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
 
@@ -31,15 +34,19 @@ async def record(pack, cfg, item, sem):
             raw = tmp.name
         for attempt in range(4):
             try:
-                await edge_tts.Communicate(item['text'], cfg['voice'], pitch=cfg['pitch'], rate=cfg['rate'], proxy=PROXY).save(raw)
+                text = item['text'] + ('?' if item['key'] in QUESTIONS else '')
+                await edge_tts.Communicate(text, cfg['voice'], pitch=cfg['pitch'], rate=cfg['rate'], proxy=PROXY).save(raw)
                 break
             except Exception as e:  # network hiccup: retry
                 if attempt == 3:
                     raise
                 await asyncio.sleep(2 * (attempt + 1))
         # Trim the silence before and after, so a sentence read word by word flows.
-        trim = 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03,areverse,' \
-               'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08,areverse'
+        # Keep a little air before and after, and fade the very end, so no
+        # consonant is clipped (short words like "gel" or "ne").
+        trim = 'silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05,areverse,' \
+               'silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.14,areverse,' \
+               'afade=t=in:d=0.01,areverse,afade=t=in:d=0.04,areverse'
         subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', raw, '-af', trim, '-ac', '1', '-ar', '24000',
                         '-b:a', '40k', out], check=True)
         os.unlink(raw)

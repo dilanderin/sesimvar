@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-24 (evening)
+- **Short words no longer sound cut.** iPads put the speaker to sleep after a moment of quiet and swallow the start of the next sound, which made short words like *gel* and *ne* sound clipped. The app now keeps the sound output awake while it is open (inaudibly; it rests when the app is in the background) and gives each word a moment of lead time.
+- **All 418 recordings were made again** with a little more room before and after each word and a soft ending, so no last consonant is cut.
+- **Question words sound like questions:** *Ne?*, *Nerede?*, *Kim?* are read with a question's tone.
+
 ## 2026-11-24 (afternoon)
 - **Kelime önerileri: the next word comes to you.** After a word is tapped, 2–3 likely next words appear as small dashed cards in the speech balloon. Tap one to add it and hear it. No searching the board needed.
   - Su → **istiyorum, istemiyorum, ver** · Kol → **acıyor, kaşınıyor** · Anne → **gel, nerede, ara** · Ben → **acıktım, susadım, yoruldum**.

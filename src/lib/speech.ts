@@ -87,7 +87,10 @@ async function playClip(url: string, my: number): Promise<boolean> {
   const buf = await loadBuffer(url);
   if (my !== token) return false;
   if (!buf) return playUrl(url, my);
-  if (c.state !== 'running') void c.resume().catch(() => undefined);
+  // Wait until audio is really running, or the first sound of the word is lost.
+  if (c.state !== 'running') await c.resume().catch(() => undefined);
+  keepAwake(c);
+  if (my !== token) return false;
   return new Promise((resolve) => {
     const node = c.createBufferSource();
     node.buffer = buf;
@@ -103,7 +106,8 @@ async function playClip(url: string, my: number): Promise<boolean> {
     node.onended = () => finish(my === token);
     // Safety net if the context stays suspended.
     setTimeout(() => finish(my === token), buf.duration * 1000 + 800);
-    node.start();
+    // A moment of lead time, so the start is never cut on a busy device.
+    node.start(c.currentTime + 0.03);
   });
 }
 
@@ -117,10 +121,42 @@ function sharedAudio(): HTMLAudioElement {
 
 /** iOS only lets audio and speech start from a touch. Call this on the first
  *  pointerdown so later (delayed) playback is allowed. */
+let awake: AudioBufferSourceNode | null = null;
+
+/** Keep the audio output running while the app is open. iPads put the
+ *  speaker to sleep after a moment of quiet and swallow the start of the next
+ *  sound, which makes short words (gel, ne) sound cut. An inaudible loop
+ *  keeps it awake. */
+function keepAwake(c: AudioCtx) {
+  if (awake) return;
+  try {
+    const b = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const data = b.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() - 0.5) * 2e-5; // far below hearing
+    const n = c.createBufferSource();
+    n.buffer = b;
+    n.loop = true;
+    n.connect(c.destination);
+    n.start();
+    awake = n;
+  } catch {
+    awake = null;
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx) return;
+    if (document.visibilityState === 'visible') void ctx.resume().catch(() => undefined);
+    else void ctx.suspend().catch(() => undefined); // no sound in the background: save the battery
+  });
+}
+
 export function unlockAudio() {
   // Every touch: make sure Web Audio is running (iOS suspends it in the background).
   const c = audioContext();
   if (c && c.state !== 'running') void c.resume().catch(() => undefined);
+  if (c) keepAwake(c);
   if (unlocked) return;
   unlocked = true;
   try {
