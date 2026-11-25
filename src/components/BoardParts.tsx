@@ -514,7 +514,7 @@ export function ActionButton({
         justifyContent: 'center',
         gap: compact ? 7 : portrait ? 12 : 4,
         fontSize: compact ? 18 : portrait ? 24 : 22,
-        fontWeight: 600,
+        fontWeight: 700,
         color: '#FFFFFF',
         outline: active ? `${compact ? 5 : 8}px solid ${kind === 'oku' ? 'rgba(232,89,12,0.28)' : 'rgba(15,157,94,0.28)'}` : '0px solid transparent',
         transition: 'outline 300ms ease-out',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { seedWords } from '../data';
-import { FORM_WORD_IDS, wordForms } from '../forms';
+import { FORM_WORD_IDS, formBefore, wordForms } from '../forms';
+import type { Word } from '../data';
 
 describe('word forms', () => {
   const seeds = [...seedWords('genel'), ...seedWords('zeki')];
@@ -38,5 +39,15 @@ describe('word forms', () => {
     expect(wordForms({ id: 'w-ic-abc123', say: 'iç' })).toContain('içti');
     expect(wordForms({ id: 'w-ye-abc123', say: 'Ye' })).toContain('yedi');
     expect(wordForms({ id: 'w-zurafa-1', say: 'zürafa' })).toEqual([]);
+  });
+
+  it('says "Kolum acıyor" for Kol + acıyor, and leaves everything else alone', () => {
+    const kol = { id: 'vucut-kol', say: 'kol' } as Word;
+    expect(formBefore({ word: kol }, { say: 'acıyor' })).toBe('kolum');
+    expect(formBefore({ word: { id: 'vucut-karin', say: 'karın' } as Word }, { say: 'acıyor' })).toBe('karnım');
+    expect(formBefore({ word: { id: 'w-goz-1', say: 'göz' } as Word }, { say: 'kaşınıyor' })).toBe('gözüm');
+    expect(formBefore({ word: kol }, { say: 'ver' })).toBeUndefined(); // not about pain
+    expect(formBefore({ word: kol, form: 'kollarım' }, { say: 'acıyor' })).toBeUndefined(); // chosen form stays
+    expect(formBefore({ word: { id: 'gunluk-su', say: 'su' } as Word }, { say: 'acıyor' })).toBeUndefined();
   });
 });

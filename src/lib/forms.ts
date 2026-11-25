@@ -84,6 +84,13 @@ const SAY_FORMS: Record<string, string[]> = {
   sarıl: ['sarılıyorum', 'sarıldım', 'sarıldı', 'sarılsın', 'sarılma'],
   aç: ['açıyorum', 'açtım', 'açtı', 'açsın', 'açma'],
   kapat: ['kapatıyorum', 'kapattım', 'kapattı', 'kapatsın', 'kapatma'],
+  // Body parts from Hazır resimler: "my …" first, like the built-in ones.
+  göz: ['gözüm', 'gözlerim', 'gözüme', 'gözümde'],
+  kulak: ['kulağım', 'kulaklarım', 'kulağıma', 'kulağımda'],
+  el: ['elim', 'ellerim', 'elime', 'elimde'],
+  boğaz: ['boğazım', 'boğazıma', 'boğazımda'],
+  sırt: ['sırtım', 'sırtıma', 'sırtımda'],
+  ayak: ['ayağım', 'ayaklarım', 'ayağıma', 'ayağımda'],
 };
 
 
@@ -99,3 +106,19 @@ export function wordForms(word: Pick<Word, 'id'> & { label?: string; say?: strin
 export const FORM_WORD_IDS = Object.keys(FORMS);
 /** Every form of the library action words (for recording the voice). */
 export const SAY_FORM_TEXTS = Object.values(SAY_FORMS).flat();
+
+/** Body parts and what can be wrong with them: "Kol" + "acıyor" is said as
+ *  "Kolum acıyor", the way people say it. */
+const BODY_PARTS = new Set(['kol', 'bacak', 'baş', 'karın', 'diş', 'göz', 'kulak', 'el', 'boğaz', 'sırt', 'ayak']);
+const BODY_STATES = new Set(['acıyor', 'ağrıyor', 'kaşınıyor', 'kızardı', 'kırıldı', 'kanıyor', 'şişti']);
+
+/** The form the previous word should take before `next` ("kolum" before
+ *  "acıyor"), or undefined to leave it as it is. A form the person chose
+ *  themselves is never changed. */
+export function formBefore(prev: { word: Word; form?: string }, next: Pick<Word, 'say'>): string | undefined {
+  if (prev.form) return undefined;
+  const part = lowerTr(prev.word.say.trim());
+  if (!BODY_PARTS.has(part) || !BODY_STATES.has(lowerTr(next.say.trim()))) return undefined;
+  const mine = wordForms(prev.word)[0];
+  return mine && mine !== part ? mine : undefined;
+}

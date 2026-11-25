@@ -735,7 +735,7 @@ function WordRow({
 
   return (
     <div data-row={word.id} style={{ borderBottom: `2px solid ${C.soft}`, background: over ? C.soft : undefined, opacity: dragging ? 0.5 : 1 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '5px 4px', opacity: word.hidden ? 0.55 : 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '5px 4px' }}>
         <span
           role="button"
           aria-label={`${word.label}: sürükleyerek yerini değiştir`}
@@ -755,6 +755,9 @@ function WordRow({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            // A hidden word: its picture fades, its text stays readable.
+            opacity: word.hidden ? 0.4 : 1,
+            filter: word.hidden ? 'grayscale(1)' : undefined,
           }}
         >
           <WordPicture picture={word.picture} label={word.label} size={38} color={catColor} />
@@ -765,7 +768,7 @@ function WordRow({
           aria-expanded={open}
           style={{ ...btn, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3, background: 'transparent', textAlign: 'left' }}
         >
-          <span style={{ fontSize: 19, fontWeight: 600, color: C.text }}>{word.label}</span>
+          <span style={{ fontSize: 19, fontWeight: 600, color: word.hidden ? C.muted : C.text }}>{word.label}</span>
           {word.recording ? (
             <span
               style={{
@@ -1470,7 +1473,8 @@ export function Settings({ onClose }: { onClose: () => void }) {
   }, [words]);
 
   return (
-    <div
+    <main
+      aria-label="Ayarlar"
       style={{
         position: 'relative',
         width: '100%',
@@ -1497,7 +1501,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             boxShadow: `0 10px 20px rgba(232,89,12,0.35), inset 0 -5px 0 ${C.orangeInset}`,
             color: '#FFFFFF',
             fontSize: 19,
-            fontWeight: 600,
+            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
             gap: 4,
@@ -1627,6 +1631,6 @@ export function Settings({ onClose }: { onClose: () => void }) {
       <div style={{ flex: 'none', padding: phone ? '0 10px 8px' : '0 28px 14px', fontSize: phone ? 11 : 13, fontWeight: 500, color: C.muted }}>
         Piktogramlar: Sergio Palao, ARASAAC (arasaac.org), CC BY-NC-SA · Reklam yok, hesap yok; kelimeler, cümleler ve kayıtlar bu cihazda kalır.
       </div>
-    </div>
+    </main>
   );
 }

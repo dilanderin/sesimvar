@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronUp, History, Settings as SettingsIcon, X } f
 import { CATEGORIES, CATEGORY_BY_ID, SLOTS_PER_CATEGORY, type Category, type CategoryId, type Word } from '../lib/data';
 import { DECOR } from '../lib/decor';
 import { preloadClips, saySentence, sayWord, stopSpeaking, unlockAudio } from '../lib/speech';
-import { wordForms } from '../lib/forms';
+import { formBefore, wordForms } from '../lib/forms';
 import { isValidAddress, openMessages, sentenceText, smsUrl } from '../lib/messages';
 import { clearHistory, rememberSentence, useAppState } from '../lib/store';
 import { countSend, countSentence, countTap } from '../lib/usage';
@@ -48,6 +48,13 @@ interface Flight {
   to: Rect;
   circle: string;
   form?: string;
+}
+
+/** "Kol" then "acıyor": the sentence says "Kolum acıyor" (see formBefore). */
+function withGrammar(cs: ChipState[], next: Word): ChipState[] {
+  const last = cs[cs.length - 1];
+  const form = last && formBefore(last, next);
+  return form ? [...cs.slice(0, -1), { ...last, form }] : cs;
 }
 
 let uidCounter = 0;
@@ -233,7 +240,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         // Calm mode: a ring around the card, the word appears at once.
         setRingId(word.id);
         later(500, () => setRingId((r) => (r === word.id ? null : r)));
-        setChips((cs) => [...cs, { uid, word, tones: t, pending: false, popping: false, form }]);
+        setChips((cs) => [...withGrammar(cs, word), { uid, word, tones: t, pending: false, popping: false, form }]);
         void sayWord(spoken(word, form), settings.voiceURI);
         return;
       }
@@ -248,7 +255,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       showPose('look');
       // Say the word right away; the picture flies to the balloon meanwhile.
       void sayWord(spoken(word, form), settings.voiceURI);
-      setChips((cs) => [...cs, { uid, word, tones: t, pending: true, popping: false, form }]);
+      setChips((cs) => [...withGrammar(cs, word), { uid, word, tones: t, pending: true, popping: false, form }]);
 
       // 300–600 ms: the picture flies to its place in the balloon.
       later(300, () => {
@@ -481,8 +488,6 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
       />
       <div
         ref={rowRef}
-        role="list"
-        aria-label="Cümle"
         aria-live="polite"
         className="kb-noscrollbar"
         style={{
@@ -525,11 +530,15 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
             Gönderildi
           </span>
         )}
-        {chips.map((c, i) => (
-          <span role="listitem" key={c.uid} style={{ display: 'flex', flex: 'none' }}>
-            <SentenceChip chip={c} theme={theme} orientation={orientation} reading={readingIdx === i} motion={motion} first={i === 0} compact={phone} />
+        {chips.length > 0 && (
+          <span role="list" aria-label="Cümle" style={{ display: 'flex', alignItems: 'center', gap: phone ? 8 : 14, flex: 'none' }}>
+            {chips.map((c, i) => (
+              <span role="listitem" key={c.uid} style={{ display: 'flex', flex: 'none' }}>
+                <SentenceChip chip={c} theme={theme} orientation={orientation} reading={readingIdx === i} motion={motion} first={i === 0} compact={phone} />
+              </span>
+            ))}
           </span>
-        ))}
+        )}
         {suggestions.length > 0 && fit > 0 && (
           <span role="group" aria-label="Öneriler" style={{ display: 'flex', gap: phone ? 6 : 10, flex: 'none', paddingLeft: chips.length ? (phone ? 2 : 6) : 0 }}>
             {suggestions.slice(0, fit).map((w) => (
@@ -731,7 +740,8 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
   };
 
   return (
-    <div
+    <main
+      aria-label="Sesim Var"
       style={{
         position: 'relative',
         width: stageW,
@@ -988,7 +998,7 @@ export function Board({ theme, onOpenSettings }: { theme: Theme; onOpenSettings:
         <Flyer key={f.uid} word={f.word} from={f.from} to={f.to} circleColor={f.circle} onDone={() => land(f)} />
       ))}
       {confetti > 0 && <Confetti key={confetti} width={stageW} height={stageH} />}
-    </div>
+    </main>
   );
 }
 
