@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-26
+- **12 more ready-made pictures, with Ahmet's voice:**
+  - Looking after myself: **Duş, Diş fırçala, El yıka** (Günlük) and **Giyin** (Eylem).
+  - Things: **Ayakkabı, Mont, Pijama, Battaniye, Işık, Kitap** (Eşyalar).
+  - Places: **Oda, Okul** (Yerler).
+- Suggestions know them: after **Işık** come *aç / kapat*, after **Oda** *gidelim / git*, after *yoruldum* also **Oda**.
+
 ## 2026-11-25
 - **"Kolum acıyor", by itself.** When a body part is followed by *acıyor*, *kaşınıyor*, *kızardı* or *kırıldı*, the sentence uses the "my" form, the way people say it: Kol + acıyor → **Kolum acıyor**, Karın + acıyor → **Karnım acıyor**. Göz, Kulak, El, Boğaz, Sırt and Ayak from Hazır resimler have these forms too (gözüm, kulağım, elim…), in Ahmet's voice. A form chosen by holding the card is never changed.
 - **Easier for VoiceOver and easier to read:** the sentence is announced as its own list, Oku and Gönder labels are bolder, and in Ayarlar a hidden word's picture fades while its name stays readable.
