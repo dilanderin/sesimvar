@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-27
+- **12 more ready-made pictures, with Ahmet's voice:**
+  - Feelings: **Heyecanlı, Utandım, Şaşırdım, Komik, Sakin, Yalnız** (Duygu, which had only Mutlu on the board).
+  - Weather: **Yağmur, Kar, Güneşli** (Günlük).
+  - Times of day: **Sabah, Akşam, Gece** (Temel).
+
 ## 2026-11-26
 - **12 more ready-made pictures, with Ahmet's voice:**
   - Looking after myself: **Duş, Diş fırçala, El yıka** (Günlük) and **Giyin** (Eylem).

@@ -183,7 +183,7 @@ const SEEDS: Record<CategoryId | 'core', Seed[]> = {
 
 /** Pictograms redrawn for Sesim Var (outlined style), by file stem. Seed
  *  words use one of these when it exists, otherwise their original picture. */
-export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'al', 'anne', 'ara', 'araba', 'arkadas', 'ates', 'ayak', 'ayakkabi', 'az', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'battaniye', 'bekle', 'ben', 'bilgisayar', 'bilmiyorum', 'bitti', 'bogaz', 'bozuk', 'bugun', 'buyuk', 'calismiyor', 'cay', 'cikolata', 'cizgi-film', 'cok', 'daha', 'dis', 'dis-fircala', 'disari', 'dizi', 'doktor', 'dondurma', 'dun', 'dur', 'dus', 'dustu', 'ekmek', 'ekran', 'el', 'el-yika', 'elazig', 'eve', 'evet', 'film', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'giyin', 'gonder', 'goz', 'gunaydin', 'guzel', 'haberler', 'hasta', 'hastalandi', 'hastane', 'hayir', 'ic', 'ilac', 'internet', 'isik', 'istemiyorum', 'istiyorum', 'iyi', 'iyi-geceler', 'izle', 'kahve', 'kalk', 'kan', 'kapat', 'karin', 'kasiniyor', 'kayboldu', 'kim', 'kirildi', 'kisiler', 'kitap', 'kizardi', 'kizgin', 'kol', 'korktum', 'koy', 'kucuk', 'kulak', 'kulaklik', 'kumanda', 'lego', 'lutfen', 'market', 'merhaba', 'meyve', 'minecraft', 'mont', 'mutlu', 'muzik', 'ne', 'nerede', 'netflix', 'oda', 'oksuruk', 'okul', 'oldu', 'otur', 'oyna', 'oyun', 'oyun-kolu', 'ozledim', 'ozur-dilerim', 'para', 'park', 'pijama', 'pizza', 'saril', 'sarj-bitti', 'sarj-kablosu', 'seviyorum', 'sicak', 'sikildim', 'simdi', 'sirt', 'soguk', 'sonra', 'su', 'susadim', 'sut', 'tablet', 'tamam', 'telefon', 'televizyon', 'tesekkurler', 'tuvalet', 'usudum', 'uyku', 'uyu', 'uzgun', 'var', 'ver', 'video', 'vurdum', 'yap', 'yardim', 'yarin', 'ye', 'yemek', 'yok', 'yoruldum', 'youtube']);
+export const V2_PICTOS = new Set<string>(['ac', 'aciktim', 'aciyor', 'aksam', 'al', 'anne', 'ara', 'araba', 'arkadas', 'ates', 'ayak', 'ayakkabi', 'az', 'baba', 'bacak', 'bak', 'banyo', 'bas', 'battaniye', 'bekle', 'ben', 'bilgisayar', 'bilmiyorum', 'bitti', 'bogaz', 'bozuk', 'bugun', 'buyuk', 'calismiyor', 'cay', 'cikolata', 'cizgi-film', 'cok', 'daha', 'dis', 'dis-fircala', 'disari', 'dizi', 'doktor', 'dondurma', 'dun', 'dur', 'dus', 'dustu', 'ekmek', 'ekran', 'el', 'el-yika', 'elazig', 'eve', 'evet', 'film', 'gece', 'gel', 'geldi', 'getir', 'gidelim', 'git', 'gitti', 'giyin', 'gonder', 'goz', 'gunaydin', 'gunesli', 'guzel', 'haberler', 'hasta', 'hastalandi', 'hastane', 'hayir', 'heyecanli', 'ic', 'ilac', 'internet', 'isik', 'istemiyorum', 'istiyorum', 'iyi', 'iyi-geceler', 'izle', 'kahve', 'kalk', 'kan', 'kapat', 'kar', 'karin', 'kasiniyor', 'kayboldu', 'kim', 'kirildi', 'kisiler', 'kitap', 'kizardi', 'kizgin', 'kol', 'komik', 'korktum', 'koy', 'kucuk', 'kulak', 'kulaklik', 'kumanda', 'lego', 'lutfen', 'market', 'merhaba', 'meyve', 'minecraft', 'mont', 'mutlu', 'muzik', 'ne', 'nerede', 'netflix', 'oda', 'oksuruk', 'okul', 'oldu', 'otur', 'oyna', 'oyun', 'oyun-kolu', 'ozledim', 'ozur-dilerim', 'para', 'park', 'pijama', 'pizza', 'sabah', 'sakin', 'saril', 'sarj-bitti', 'sarj-kablosu', 'sasirdim', 'seviyorum', 'sicak', 'sikildim', 'simdi', 'sirt', 'soguk', 'sonra', 'su', 'susadim', 'sut', 'tablet', 'tamam', 'telefon', 'televizyon', 'tesekkurler', 'tuvalet', 'usudum', 'utandim', 'uyku', 'uyu', 'uzgun', 'var', 'ver', 'video', 'vurdum', 'yagmur', 'yalniz', 'yap', 'yardim', 'yarin', 'ye', 'yemek', 'yok', 'yoruldum', 'youtube']);
 
 function pictoSrc(file: string): string {
   const stem = file.replace(/\.(png|svg)$/, '');
@@ -279,6 +279,19 @@ export const LIBRARY: LibraryItem[] = (
     ['Kitap', 'esyalar', 'kitap'],
     ['Oda', 'yerler', 'oda'],
     ['Okul', 'yerler', 'okul'],
+    // Feelings, weather and times of day (2026-11-27)
+    ['Heyecanlı', 'duygu', 'heyecanli'],
+    ['Utandım', 'duygu', 'utandim'],
+    ['Şaşırdım', 'duygu', 'sasirdim'],
+    ['Komik', 'duygu', 'komik'],
+    ['Sakin', 'duygu', 'sakin'],
+    ['Yalnız', 'duygu', 'yalniz'],
+    ['Yağmur', 'gunluk', 'yagmur'],
+    ['Kar', 'gunluk', 'kar'],
+    ['Güneşli', 'gunluk', 'gunesli'],
+    ['Sabah', 'temel', 'sabah'],
+    ['Akşam', 'temel', 'aksam'],
+    ['Gece', 'temel', 'gece'],
   ] as [string, CategoryId, string][]
 )
   .filter(([, , stem]) => V2_PICTOS.has(stem))
